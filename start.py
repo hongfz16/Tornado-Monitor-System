@@ -23,7 +23,10 @@ with open('secret.json','r') as f:
     define("db_password", default=db_data['Password'], help="database password")	
 
 define("port", default=8000, help="run on the given port", type=int)
-define("db_delete", default=True, help="Delte all the tables in db")
+define("db_delete", default=False, help="Delte all the tables in db")
+
+class NoResultError(Exception):
+    pass
 
 async def clear_db(db):
     with open('delete.sql','r') as f:
@@ -34,7 +37,7 @@ async def clear_db(db):
 async def maybe_create_tables(db):
     try:
         with (await db.cursor()) as cur:
-            await cur.execute("SELECT COUNT(*) FROM entries LIMIT 1")
+            await cur.execute("SELECT COUNT(*) FROM users LIMIT 1")
             await cur.fetchone()
     except psycopg2.ProgrammingError:
         with open('schema.sql') as f:
@@ -104,6 +107,15 @@ class BaseHandler(tornado.web.RequestHandler):
             raise ValueError("Expected 1 result, got %d" % len(results))
         return results[0]
 
+    async def prepare(self):
+        # get_current_user cannot be a coroutine, so set
+        # self.current_user in prepare instead.
+        user_id = self.get_secure_cookie("monitor_user")
+        if user_id:
+            print(user_id)
+            self.current_user = await self.queryone("SELECT * FROM users WHERE id = %s",
+                                                    int(user_id))
+
 class IndexHandler(BaseHandler):
     async def get(self):
         self.render("index.html")
@@ -120,25 +132,77 @@ class AuthSignupHandler(BaseHandler):
             user_name = self.get_argument("name")
             hashed_password = await tornado.ioloop.IOLoop.current().run_in_executor(
                 None, bcrypt.hashpw, tornado.escape.utf8(self.get_argument("password")),
-                tornado.escape.utf8(author.hashed_password))
+                bcrypt.gensalt())
             user_hashed_password = tornado.escape.to_unicode(hashed_password)
             await self.execute("INSERT INTO users (email, name, hashed_password, level) VALUES (%s, %s, %s, 1)",
                                         user_email, user_name, user_hashed_password)
             user_id = await self.queryone("SELECT id FROM users WHERE email = %s", user_email)
-            self.set_secure_cookie("monitor_user", str(user_id))
+            self.set_secure_cookie("monitor_user", str(user_id.id))
             self.redirect(self.get_argument("next", "/"))
             return
         self.render('signup.html', error="This E-mail has existed!")
         
 
 class AuthLoginHandler(BaseHandler):
-    pass
+    def get(self):
+        self.render("login.html", error=None)
+
+    async def post(self):
+        try:
+            user = await self.queryone("SELECT * FROM users WHERE email = %s",
+                                        self.get_argument("email"))
+        except NoResultError:
+            self.render("login.html", error="Email not found. Please Sign up first.")
+            return
+        hashed_password = await tornado.ioloop.IOLoop.current().run_in_executor(
+            None, bcrypt.hashpw, tornado.escape.utf8(self.get_argument("password")),
+            tornado.escape.utf8(user.hashed_password))
+        hashed_password = tornado.escape.to_unicode(hashed_password)
+        if hashed_password == user.hashed_password:
+            self.set_secure_cookie("monitor_user", str(user.id))
+            self.redirect(self.get_argument("next", "/"))
+        else:
+            self.render("login.html", error="Incorrect password.")
 
 class AuthLogoutHandler(BaseHandler):
-    pass
+    @tornado.web.authenticated
+    def get(self):
+        self.clear_cookie("monitor_user")
+        self.redirect(self.get_argument("next", "/"))
 
 class AuthChangepwdHandler(BaseHandler):
-    pass
+    @tornado.web.authenticated
+    def get(self):
+        self.render("changepwd.html", error=None)
+
+    async def post(self):
+        try:
+            user = await self.queryone("SELECT * FROM users WHERE id = %s",
+                                        self.current_user.id)
+        except NoResultError:
+            self.render("changepwd.html", 
+                        error="User Not Found. There must be something wrong.")
+            return
+        if self.get_argument("newpassword") != self.get_argument("newpasswordagain"):
+            self.render("changepwd.html",
+                        error="The second password is different from the first one.")
+            return
+        new_hashed_password = await tornado.ioloop.IOLoop.current().run_in_executor(
+            None, bcrypt.hashpw, tornado.escape.utf8(self.get_argument("newpassword")),
+            bcrypt.gensalt())
+        new_hashed_password = tornado.escape.to_unicode(new_hashed_password)
+        hashed_password = await tornado.ioloop.IOLoop.current().run_in_executor(
+            None, bcrypt.hashpw, tornado.escape.utf8(self.get_argument("originalpassword")),
+            tornado.escape.utf8(user.hashed_password))
+        hashed_password = tornado.escape.to_unicode(hashed_password)
+        if hashed_password == user.hashed_password:
+            await self.execute("UPDATE users SET hashed_password=%s WHERE id=%s;",
+                                new_hashed_password,
+                                self.current_user.id)
+            self.render("changepwdsucc.html", succ="Successfully changed password!")
+        else:
+            self.render("changepwd.html",
+                        error="Original Password incorrect!")
 
 class AuthCreateUserHandler(BaseHandler):
     # pass
