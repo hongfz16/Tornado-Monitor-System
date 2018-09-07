@@ -8,6 +8,7 @@
     {% block head %}{% end %}
     <script type="text/javascript">
       function deleteAllCookies() {
+        console.log("deleteAllCookies")
         var cookies = document.cookie.split(";");
 
         for (var i = 0; i < cookies.length; i++) {
