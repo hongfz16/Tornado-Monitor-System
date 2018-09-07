@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-
 import aiopg
 import bcrypt
 import os.path
@@ -25,6 +23,13 @@ with open('secret.json','r') as f:
     define("db_password", default=['Password'], help="database password")	
 
 define("port", default=8000, help="run on the given port", type=int)
+define("db_delete", default=True, help="Delte all the tables in db")
+
+async def clear_db(db):
+    with open('delete.sql','r') as f:
+        delsql = f.read()
+    with (await db.cursor()) as cur:
+        await cur.execute(delsql)
 
 async def maybe_create_tables(db):
     try:
@@ -126,6 +131,8 @@ async def main():
             user=options.db_user,
             password=options.db_password,
             dbname=options.db_database) as db:
+        if options.db_delete:
+            await clear_db(db)
         await maybe_create_tables(db)
         app = Application(db)
         app.listen(options.port)
@@ -135,7 +142,6 @@ async def main():
         # call shutdown_event.set().
         shutdown_event = tornado.locks.Event()
         await shutdown_event.wait()
-
 
 if __name__ == "__main__":
     tornado.ioloop.IOLoop.current().run_sync(main)
