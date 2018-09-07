@@ -66,6 +66,7 @@ class Application(tornado.web.Application):
             (r"/auth/logout", AuthLogoutHandler),
             (r"/auth/changepwd", AuthChangepwdHandler),
             (r"/auth/createuser", AuthCreateUserHandler),
+            (r"/auth/changepwdsucc", AuthChangepwdsuccHandler),
         ]
         settings = dict(
             web_title=u"Intelligent Monitor System",
@@ -181,6 +182,11 @@ class AuthLogoutHandler(BaseHandler):
         self.clear_cookie("monitor_user")
         self.redirect(self.get_argument("next", "/"))
 
+class AuthChangepwdsuccHandler(BaseHandler):
+    def get(self):
+        self.render("changepwdsucc.html", succ="Successfully changed password!")
+
+
 class AuthChangepwdHandler(BaseHandler):
     @tornado.web.authenticated
     def get(self):
@@ -210,7 +216,8 @@ class AuthChangepwdHandler(BaseHandler):
             await self.execute("UPDATE users SET hashed_password=%s WHERE id=%s;",
                                 new_hashed_password,
                                 self.current_user.id)
-            self.render("changepwdsucc.html", succ="Successfully changed password!")
+            self.clear_cookie("monitor_user")
+            self.redirect("/auth/changepwdsucc")
         else:
             self.render("changepwd.html",
                         error="Original Password incorrect!")
