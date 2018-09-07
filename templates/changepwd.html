@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+
+{% block body %}
+{% if error %}
+<span style="color: red">Error: {{ error }}</span><p>
+{% end %}
+
+<form action="/auth/login" method="POST">
+  Original Password: <input name="originalpassword" type="password"><br>
+  New Password: <input name="newpassword" type="password"><br>
+  New Password Again: <input name="newpasswordagain" type="password"><br>
+  {% module xsrf_form_html() %}
+  <input type="submit" value="Submit">
+</form>
+{% end %}
