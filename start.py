@@ -20,7 +20,7 @@ with open('secret.json','r') as f:
     define("db_port", default=5432, help="database port")
     define("db_database", default=db_data['Database'], help="database name")
     define("db_user", default=db_data['Username'], help="database user")
-    define("db_password", default=['Password'], help="database password")	
+    define("db_password", default=db_data['Password'], help="database password")	
 
 define("port", default=8000, help="run on the given port", type=int)
 define("db_delete", default=True, help="Delte all the tables in db")
@@ -50,6 +50,8 @@ class Application(tornado.web.Application):
             (r"/auth/signup", AuthSignupHandler),
             (r"/auth/login", AuthLoginHandler),
             (r"/auth/logout", AuthLogoutHandler),
+            (r"/auth/changepwd", AuthChangepwdHandler),
+            (r"/auth/createuser", AuthCreateUserHandler),
         ]
         settings = dict(
             web_title=u"Intelligent Monitor System",
@@ -113,6 +115,12 @@ class AuthLoginHandler(BaseHandler):
     pass
 
 class AuthLogoutHandler(BaseHandler):
+    pass
+
+class AuthChangepwdHandler(BaseHandler):
+    pass
+
+class AuthCreateUserHandler(BaseHandler):
     pass
 
 async def main():
