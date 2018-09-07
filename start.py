@@ -123,7 +123,7 @@ class BaseHandler(tornado.web.RequestHandler):
         # self.current_user in prepare instead.
         user_id = self.get_secure_cookie("monitor_user")
         if user_id:
-            print(user_id)
+            # print(user_id)
             self.current_user = await self.queryone("SELECT * FROM users WHERE id = %s",
                                                     int(user_id))
 
@@ -216,7 +216,56 @@ class AuthChangepwdHandler(BaseHandler):
                         error="Original Password incorrect!")
 
 class AuthCreateUserHandler(BaseHandler):
-    pass
+    # pass
+    @tornado.web.authenticated
+    async def get(self):
+        user_id_str = self.get_secure_cookie("monitor_user")
+        print(type(user_id_str))
+        print(user_id_str)
+        if not user_id_str: return None
+        user_id = int(user_id_str)
+        try:
+            level = await self.queryone("SELECT level FROM users WHERE id = %s;", user_id)
+        except:
+            self.redirect("/")
+            return
+        print(level.level)
+        if (level.level != 0):
+            self.redirect("/")
+            return
+        self.render("create.html", error=None)
+
+    @tornado.web.authenticated
+    async def post(self):
+        user_id_str = self.get_secure_cookie("monitor_user")
+        if not user_id_str: return None
+        user_id = int(user_id_str)
+        try:
+            level = await self.queryone("SELECT level FROM users WHERE id = %i", user_id)
+        except:
+            self.redirect("/")
+            return
+        if (level.level != 0):
+            self.redirect("/")
+            return
+
+        user_email = self.get_argument("email")
+        try:
+            await self.queryone("SELECT * FROM users WHERE email = %s", user_email)
+        except NoResultError:
+            user_name = self.get_argument("name")
+            hashed_password = await tornado.ioloop.IOLoop.current().run_in_executor(
+                None, bcrypt.hashpw, tornado.escape.utf8(self.get_argument("password")),
+                bcrypt.gensalt())
+            user_hashed_password = tornado.escape.to_unicode(hashed_password)
+            await self.execute("INSERT INTO users (email, name, hashed_password, level) VALUES (%s, %s, %s, 1)",
+                                        user_email, user_name, user_hashed_password)
+            user_id = await self.queryone("SELECT id FROM users WHERE email = %s", user_email)
+            self.set_secure_cookie("monitor_user", str(user_id.id))
+            self.redirect(self.get_argument("next", "/"))
+            return
+        self.render('create.html', error="This E-mail has existed!")
+
 
 async def main():
     tornado.options.parse_command_line()
