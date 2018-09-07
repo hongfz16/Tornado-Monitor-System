@@ -73,7 +73,6 @@ class BaseHandler(tornado.web.RequestHandler):
 
     async def execute(self, stmt, *args):
         """Execute a SQL statement.
-
         Must be called with ``await self.execute(...)``
         """
         with (await self.application.db.cursor()) as cur:
@@ -81,13 +80,9 @@ class BaseHandler(tornado.web.RequestHandler):
 
     async def query(self, stmt, *args):
         """Query for a list of results.
-
         Typical usage::
-
             results = await self.query(...)
-
         Or::
-
             for row in await self.query(...)
         """
         with (await self.application.db.cursor()) as cur:
@@ -97,7 +92,6 @@ class BaseHandler(tornado.web.RequestHandler):
 
     async def queryone(self, stmt, *args):
         """Query for exactly one result.
-
         Raises NoResultError if there are no results, or ValueError if
         there are more than one.
         """
