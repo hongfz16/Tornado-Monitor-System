@@ -244,7 +244,7 @@ class AuthCreateUserHandler(BaseHandler):
         if not user_id_str: return None
         user_id = int(user_id_str)
         try:
-            level = await self.queryone("SELECT level FROM users WHERE id = %s", user_id)
+            level = await self.queryone("SELECT level FROM users WHERE id = %s;", user_id)
         except:
             self.redirect("/")
             return
