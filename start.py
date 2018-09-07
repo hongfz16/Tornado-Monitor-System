@@ -16,7 +16,7 @@ import unicodedata
 
 from tornado.options import define, options
 
-with open('secret.json','w') as f:
+with open('secret.json','r') as f:
     db_data = json.load(f)
     define("db_host", default="127.0.0.1", help="database host")
     define("db_port", default=5432, help="database port")
@@ -24,7 +24,7 @@ with open('secret.json','w') as f:
     define("db_user", default=db_data['Username'], help="database user")
     define("db_password", default=['Password'], help="database password")	
 
-define("port", default=8888, help="run on the given port", type=int)
+define("port", default=8000, help="run on the given port", type=int)
 
 async def maybe_create_tables(db):
     try:
@@ -41,7 +41,7 @@ class Application(tornado.web.Application):
     def __init__(self, db):
         self.db = db
         handlers = [
-            (r"/", HomeHandler),
+            (r"/", IndexHandler),
             (r"/auth/signup", AuthSignupHandler),
             (r"/auth/login", AuthLoginHandler),
             (r"/auth/logout", AuthLogoutHandler),
@@ -57,6 +57,64 @@ class Application(tornado.web.Application):
             debug=True,
         )
         super(Application, self).__init__(handlers, **settings)
+
+class BaseHandler(tornado.web.RequestHandler):
+    def row_to_obj(self, row, cur):
+        """Convert a SQL row to an object supporting dict and attribute access."""
+        obj = tornado.util.ObjectDict()
+        for val, desc in zip(row, cur.description):
+            obj[desc.name] = val
+        return obj
+
+    async def execute(self, stmt, *args):
+        """Execute a SQL statement.
+
+        Must be called with ``await self.execute(...)``
+        """
+        with (await self.application.db.cursor()) as cur:
+            await cur.execute(stmt, args)
+
+    async def query(self, stmt, *args):
+        """Query for a list of results.
+
+        Typical usage::
+
+            results = await self.query(...)
+
+        Or::
+
+            for row in await self.query(...)
+        """
+        with (await self.application.db.cursor()) as cur:
+            await cur.execute(stmt, args)
+            return [self.row_to_obj(row, cur)
+                    for row in await cur.fetchall()]
+
+    async def queryone(self, stmt, *args):
+        """Query for exactly one result.
+
+        Raises NoResultError if there are no results, or ValueError if
+        there are more than one.
+        """
+        results = await self.query(stmt, *args)
+        if len(results) == 0:
+            raise NoResultError()
+        elif len(results) > 1:
+            raise ValueError("Expected 1 result, got %d" % len(results))
+        return results[0]
+
+class IndexHandler(BaseHandler):
+    async def get(self):
+        self.render("index.html")
+
+class AuthSignupHandler(BaseHandler):
+    pass
+
+class AuthLoginHandler(BaseHandler):
+    pass
+
+class AuthLogoutHandler(BaseHandler):
+    pass
 
 async def main():
     tornado.options.parse_command_line()
