@@ -123,7 +123,7 @@ class BaseHandler(tornado.web.RequestHandler):
         # self.current_user in prepare instead.
         user_id = self.get_secure_cookie("monitor_user")
         if user_id:
-            print(user_id)
+            # print(user_id)
             self.current_user = await self.queryone("SELECT * FROM users WHERE id = %s",
                                                     int(user_id))
 
@@ -220,14 +220,17 @@ class AuthCreateUserHandler(BaseHandler):
     @tornado.web.authenticated
     async def get(self):
         user_id_str = self.get_secure_cookie("monitor_user")
+        print(type(user_id_str))
+        print(user_id_str)
         if not user_id_str: return None
         user_id = int(user_id_str)
         try:
-            level = await self.queryone("SELECT level FROM users WHERE id = %i", user_id)
+            level = await self.queryone("SELECT level FROM users WHERE id = %s;", user_id)
         except:
             self.redirect("/")
             return
-        if (level != 0):
+        print(level.level)
+        if (level.level != 0):
             self.redirect("/")
             return
         self.render("create.html", error=None)

@@ -1,6 +1,10 @@
 {% extends "base.html" %}
 
 {% block body %}
+{% if error %}
+<span style="color: red">Error: {{ error }}</span><p>
+{% end %}
+
 <form action="/auth/signup" method="POST">
   Email: <input name="email" type="text"><br>
   Name: <input name="name" type="text"><br>

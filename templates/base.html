@@ -15,6 +15,9 @@
             <span>Hello, {{ current_user.name }} - </span>
             <a href="/auth/logout?next={{ url_escape(request.uri) }}">{{ _("Logout") }}</a> - 
             <a href="/auth/changepwd">{{_("Change Password")}}</a>
+            {% if current_user.level == 0 %}
+             - <a href="/auth/createuser?next={{ url_escape(request.uri) }}">{{ _("Create") }}</a>
+            {% end %}
           {% else %}
             {% raw _('<a href="%(signupurl)s">Sign up</a> or <a href="%(loginurl)s">Login</a> to view webcam') % {"signupurl": "/auth/signup?next=" + url_escape(request.uri), "loginurl": "/auth/login?next=" + url_escape(request.uri)} %}
           {% end %}
