@@ -50,6 +50,8 @@ class Application(tornado.web.Application):
             (r"/auth/signup", AuthSignupHandler),
             (r"/auth/login", AuthLoginHandler),
             (r"/auth/logout", AuthLogoutHandler),
+            (r"/auth/changepwd", AuthChangepwdHandler),
+            (r"/auth/createuser", AuthCreateUserHandler),
         ]
         settings = dict(
             web_title=u"Intelligent Monitor System",
@@ -113,6 +115,12 @@ class AuthLoginHandler(BaseHandler):
     pass
 
 class AuthLogoutHandler(BaseHandler):
+    pass
+
+class AuthChangepwdHandler(BaseHandler):
+    pass
+
+class AuthCreateUserHandler(BaseHandler):
     pass
 
 async def main():
