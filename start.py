@@ -206,8 +206,8 @@ class AuthChangepwdHandler(BaseHandler):
 
 class AuthCreateUserHandler(BaseHandler):
     # pass
-    @to_unicodernado.web.authenticated
-    await def get(self):
+    @tornado.web.authenticated
+    async def get(self):
         user_id_str = self.get_secure_cookie("monitor_user")
         if not user_id_str: return None
         user_id = int(user_id_str)
@@ -222,7 +222,7 @@ class AuthCreateUserHandler(BaseHandler):
         self.render("create.html", error=None)
 
     @tornado.web.authenticated
-    await def post(self):
+    async def post(self):
         user_id_str = self.get_secure_cookie("monitor_user")
         if not user_id_str: return None
         user_id = int(user_id_str)
