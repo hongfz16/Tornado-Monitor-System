@@ -12,10 +12,10 @@
       <div id="header">
         <div style="float:right">
           {% if current_user %}
-            <a href="/compose">{{ _("New post") }}</a> -
-            <a href="/auth/logout?next={{ url_escape(request.uri) }}">{{ _("Sign out") }}</a>
+            <p>Hello, {{ current_user.name }}</p>
+            <a href="/auth/logout?next={{ url_escape(request.uri) }}">{{ _("Logout") }}</a>
           {% else %}
-            {% raw _('<a href="%(url)s">Sign in</a> to view webcam') % {"url": "/auth/login?next=" + url_escape(request.uri)} %}
+            {% raw _('<a href="%(signupurl)s">Sign up</a> or <a href="%(loginurl)s">Login</a> to view webcam') % {"signupurl": "/auth/signup?next=" + url_escape(request.uri), "loginurl": "/auth/login?next=" + url_escape(request.uri)} %}
           {% end %}
         </div>
         <h1><a href="/">{{ escape(handler.settings["web_title"]) }}</a></h1>
