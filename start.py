@@ -45,6 +45,17 @@ async def maybe_create_tables(db):
         with (await db.cursor()) as cur:
             await cur.execute(schema)
 
+async def create_superuser(db):
+    with await(db.cursor()) as cur:
+        user_email = "su@su.com"
+        user_name = "su"
+        user_hashed_password = await tornado.ioloop.IOLoop.current().run_in_executor(
+                None, bcrypt.hashpw, tornado.escape.utf8("superuser"),
+                bcrypt.gensalt())
+        user_hashed_password = tornado.escape.to_unicode(user_hashed_password)
+        await cur.execute("INSERT INTO users (email, name, hashed_password, level) VALUES (%s, %s, %s, 0)",
+                                        (user_email, user_name, user_hashed_password))
+
 class Application(tornado.web.Application):
     def __init__(self, db):
         self.db = db
@@ -219,6 +230,7 @@ async def main():
             dbname=options.db_database) as db:
         if options.db_delete:
             await clear_db(db)
+        # await create_superuser(db)
         await maybe_create_tables(db)
         app = Application(db)
         app.listen(options.port)
