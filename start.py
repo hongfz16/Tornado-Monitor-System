@@ -141,7 +141,36 @@ class AuthChangepwdHandler(BaseHandler):
     pass
 
 class AuthCreateUserHandler(BaseHandler):
-    pass
+    # pass
+    @tornado.web.authenticated
+    await def get(self):
+        user_id_str = self.get_secure_cookie("monitor_user")
+        if not user_id_str: return None
+        user_id = int(user_id_str)
+        try:
+            level = await self.queryone("SELECT level FROM users WHERE id = %i", user_id)
+        except:
+            self.redirect("/")
+            return
+        if (level != 0):
+            self.redirect("/")
+            return
+        self.render("create.html", error=None)
+
+    @tornado.web.authenticated
+    await def post(self):
+        user_id_str = self.get_secure_cookie("monitor_user")
+        if not user_id_str: return None
+        user_id = int(user_id_str)
+        try:
+            level = await self.queryone("SELECT level FROM users WHERE id = %i", user_id)
+        except:
+            self.redirect("/")
+            return
+        if (level != 0):
+            self.redirect("/")
+            return
+
 
 async def main():
     tornado.options.parse_command_line()
