@@ -241,7 +241,7 @@ class AuthCreateUserHandler(BaseHandler):
         if not user_id_str: return None
         user_id = int(user_id_str)
         try:
-            level = await self.queryone("SELECT level FROM users WHERE id = %i", user_id)
+            level = await self.queryone("SELECT level FROM users WHERE id = %s;", user_id)
         except:
             self.redirect("/")
             return
@@ -261,7 +261,6 @@ class AuthCreateUserHandler(BaseHandler):
             await self.execute("INSERT INTO users (email, name, hashed_password, level) VALUES (%s, %s, %s, 1)",
                                         user_email, user_name, user_hashed_password)
             user_id = await self.queryone("SELECT id FROM users WHERE email = %s", user_email)
-            self.set_secure_cookie("monitor_user", str(user_id.id))
             self.redirect(self.get_argument("next", "/"))
             return
         self.render('create.html', error="This E-mail has existed!")
