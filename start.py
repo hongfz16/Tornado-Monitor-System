@@ -147,10 +147,10 @@ class StreamHandler(tornado.web.RequestHandler):
         my_boundary = "--jpgboundary"
         while True:
             # Generating images for mjpeg stream and wraps them into http resp
-            if self.get_argument('fd') == "true":
-                img = cam.get_frame(True)
-            else:
-                img = cam.get_frame(False)
+            # if self.get_argument('fd') == "true":
+            img = cam.get_frame()
+            # else:
+                # img = cam.get_frame()
             interval = 0.05
             if self.served_image_timestamp + interval < time.time():
                 self.write(my_boundary)
