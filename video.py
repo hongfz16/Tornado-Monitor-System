@@ -18,6 +18,10 @@ class UsbCamera(object):
         self._prev_image_id = image_id
         image = self._store.get('image')
         return image
+    def decode_image(self, imbytes):
+        jpeg = np.asarray(bytearray(imbytes), dtype="uint8")
+        jpeg = cv2.imdecode(jpeg,cv2.IMREAD_COLOR)
+        return jpeg
 
 # cam = UsbCamera()
 # while True:

@@ -47,11 +47,8 @@ def start_recording():
         if image is None:
             time.sleep(0.5)
             continue
-        hello, image = cv2.imencode('.jpg', image)
-        # sio = io.StringIO()
-        # np.save(sio, image)
-        # value = sio.getvalue()
-        value = image.tostring()
+        _, image = cv2.imencode('.jpg', image)
+        value = image.tobytes()
         store.set('image', value)
         image_id = os.urandom(4)
         store.set('image_id', image_id)
