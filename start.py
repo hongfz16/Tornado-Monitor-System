@@ -16,6 +16,11 @@ import tornado.web
 import tornado.websocket
 import unicodedata
 import asyncio
+from tornado.platform.asyncio import AnyThreadEventLoopPolicy
+from threading import Thread
+from tornado.concurrent import run_on_executor, return_future
+from concurrent.futures import ThreadPoolExecutor
+
 import video
 
 from threading import Thread
@@ -141,6 +146,15 @@ class BaseHandler(tornado.web.RequestHandler):
             self.current_user = await self.queryone("SELECT * FROM users WHERE id = %s",
                                                     int(user_id))
 
+class MultiThreadHandler:
+    def __init__(self, func, *args):
+        self.thread = Thread(target = func, args=args)
+        self.thread.start()
+
+    def finish(self):
+        self.thread.join()
+
+
 # Really slow! Do not use it!
 class VideoSocketHandler(tornado.websocket.WebSocketHandler):
     def __init__(self, *args, **kwargs):
@@ -174,9 +188,7 @@ class WarningSocketHandler(tornado.websocket.WebSocketHandler):
         i = fake_poll()
         self.write_message(str(i)+' loops.')
 
-
 class StreamHandler(tornado.web.RequestHandler):
-    # @tornado.web.asynchronous
     @tornado.gen.coroutine
     def get(self):
         ioloop = tornado.ioloop.IOLoop.current()
@@ -191,9 +203,18 @@ class StreamHandler(tornado.web.RequestHandler):
         while True:
             # Generating images for mjpeg stream and wraps them into http resp
             # if self.get_argument('fd') == "true":
-            img = cam.get_frame()
+            #     # res = {}
+            #     # mt = MultiThreadHandler(cam.get_frame, True, res)
+            #     # mt.finish()
+            #     # img = res['img']
+            #     img = cam.get_frame(True)
             # else:
-                # img = cam.get_frame()
+            #     # res = {}
+            #     # mt = MultiThreadHandler(cam.get_frame, False, res)
+            #     # mt.finish()
+            #     # img = res['img']
+            #     img = cam.get_frame(False)
+            img = cam.get_frame()
             interval = 0.05
             if self.served_image_timestamp + interval < time.time():
                 self.write(my_boundary)

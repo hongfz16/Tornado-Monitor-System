@@ -26,7 +26,6 @@ class UsbCamera(object):
     def have_face(self):
         frame = self.decode_image(self.get_frame())
         frame = cv2.resize(frame, (640, 360), interpolation=cv2.INTER_CUBIC)
-
         gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
         faces = self._face_cascade.detectMultiScale(gray, 1.3, 5)
         if len(faces) > 0:
