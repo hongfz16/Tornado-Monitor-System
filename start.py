@@ -193,6 +193,12 @@ class WarningSocketHandler(tornado.websocket.WebSocketHandler):
             print("Websocket disconnected!")
 
 
+class RecordHandler:
+    executor = ThreadPoolExecutor(10)
+    @run_on_executor
+    def startRecord():
+        record.start_recording()
+
 class StreamHandler(tornado.web.RequestHandler):
     @tornado.gen.coroutine
     def get(self):
