@@ -21,6 +21,8 @@ import video
 from threading import Thread
 from tornado.options import define, options
 from tornado.platform.asyncio import AnyThreadEventLoopPolicy
+from tornado.concurrent import run_on_executor
+from concurrent.futures import ThreadPoolExecutor
 
 with open('secret.json','r') as f:
     db_data = json.load(f)
@@ -139,7 +141,7 @@ class BaseHandler(tornado.web.RequestHandler):
             self.current_user = await self.queryone("SELECT * FROM users WHERE id = %s",
                                                     int(user_id))
 
-# Really slow! Not using it!
+# Really slow! Do not use it!
 class VideoSocketHandler(tornado.websocket.WebSocketHandler):
     def __init__(self, *args, **kwargs):
         super(VideoSocketHandler, self).__init__(*args, **kwargs)
@@ -148,18 +150,33 @@ class VideoSocketHandler(tornado.websocket.WebSocketHandler):
         img = base64.b64encode(img)
         await self.write_message(img)
 
+# @tornado.gen.coroutine
+def fake_poll():
+    i = random.randint(5,9)
+    # i *= 1000000
+    # count = 0
+    # while True:
+    #     count += 1
+    #     if count >= i:
+    #         break
+    time.sleep(i)
+    return i
+
 class WarningSocketHandler(tornado.websocket.WebSocketHandler):
+    executor = ThreadPoolExecutor(10)
     def __init__(self, *args, **kwargs):
         super(WarningSocketHandler, self).__init__(*args, **kwargs)
     
-    @tornado.web.asynchronous
-    @tornado.gen.coroutine
-    async def on_message(self, message):
-        pass
+    # @tornado.web.asynchronous
+    # @tornado.gen.coroutine
+    @run_on_executor
+    def on_message(self, message):
+        i = fake_poll()
+        self.write_message(str(i)+' loops.')
 
 
 class StreamHandler(tornado.web.RequestHandler):
-    @tornado.web.asynchronous
+    # @tornado.web.asynchronous
     @tornado.gen.coroutine
     def get(self):
         ioloop = tornado.ioloop.IOLoop.current()
