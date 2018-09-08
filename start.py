@@ -16,6 +16,7 @@ import tornado.web
 import tornado.websocket
 import unicodedata
 import asyncio
+import record
 from tornado.platform.asyncio import AnyThreadEventLoopPolicy
 from threading import Thread
 from tornado.concurrent import run_on_executor, return_future
@@ -187,6 +188,12 @@ class WarningSocketHandler(tornado.websocket.WebSocketHandler):
             self.write_message('Face detected!')
         else:
             self.write_message('No face!')
+
+class RecordHandler:
+    executor = ThreadPoolExecutor(10)
+    @run_on_executor
+    def startRecord():
+        record.start_recording()
 
 class StreamHandler(tornado.web.RequestHandler):
     @tornado.gen.coroutine
@@ -389,8 +396,14 @@ async def main():
         await shutdown_event.wait()
 
 if __name__ == "__main__":
-    cam = video.UsbCamera()
-    cam2 = video.UsbCamera()
-    facedetect = video.UsbCamera()
     asyncio.set_event_loop_policy(tornado.platform.asyncio.AnyThreadEventLoopPolicy())
+    recordThread = MultiThreadHandler(record.start_recording)
+    # recordThread = Thread(target = record.start_recording)
+    # recordThread.start()
+    print("haha")
+    # Record = RecordHandler()
+    # Record.startRecord()
+    cam = video.UsbCamera()
+    # cam2 = video.UsbCamera()
+    facedetect = video.UsbCamera()
     tornado.ioloop.IOLoop.current().run_sync(main)
