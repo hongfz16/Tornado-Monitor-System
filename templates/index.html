@@ -1,6 +1,57 @@
 {% extends "base.html" %}
 
+{% block head%}
+
+<script type="text/javascript" charset="utf-8">
+	$(document).ready(function(){
+		if ("WebSocket" in window) {
+			// var ws_cam_path = 'ws://' + window.location.host + '/video_websocket';
+			var ws_warning_path = 'ws://' + window.location.host + '/warning_websocket';
+			// alert(ws_path);
+			// var ws_cam = new WebSocket(ws_cam_path);
+			var ws_warning = new WebSocket(ws_warning_path);
+			//alert(ws);
+		
+			// ws_cam.onopen = function () {
+			// 	ws_cam.send(1);
+			// };
+			// ws_cam.onmessage = function (msg) {
+			// 	$("#wscam").attr('src', 'data:image/jpg;base64,' + msg.data);
+			// 	ws_cam.send(1);
+			// };
+			// ws_cam.onerror = function (e) {
+			// 	console.log(e);
+			// 	ws_cam.send(-1);
+			// };
+
+			ws_warning.onopen = function() {
+				ws_warning.send(1);
+                console.log("First sending request!")
+			};
+			ws_warning.onmessage = function(msg) {
+				$("#wswarning").text(msg.data);
+				ws_warning.send(1);
+                console.log("Sending request!")
+			};
+			ws_warning.onerror = function(e) {
+				console.log(e);
+				ws_warning.send(-1);
+			};
+		} else {
+			alert("WebSocket not supported");
+		}
+	});
+    window.onbeforeunload = function() {
+        ws_warning.onclose = function () {console.log('Closing...')}; // disable onclose handler first
+        ws_warning.close()
+    };
+</script>
+
+{% end %}
+
 {% block body%}
 <p>这里是ZS天眼的主页！</p>
-<img id="videofield" class="video" src="/video_feed">
+<p id="wswarning"></p>
+<img id="videofield" class="video" src="/video_feed"><br>
+<!-- <img id="wscam" src="/"> -->
 {% end %}

@@ -5,17 +5,22 @@ import os.path
 import psycopg2
 import re
 import json
+import base64
+import random
 import tornado.escape
 import tornado.httpserver
 import tornado.ioloop
 import tornado.locks
 import tornado.options
 import tornado.web
+import tornado.websocket
 import unicodedata
-
+import asyncio
 import video
 
+from threading import Thread
 from tornado.options import define, options
+from tornado.platform.asyncio import AnyThreadEventLoopPolicy
 
 with open('secret.json','r') as f:
     db_data = json.load(f)
@@ -71,6 +76,8 @@ class Application(tornado.web.Application):
             (r"/auth/createuser", AuthCreateUserHandler),
             (r"/auth/changepwdsucc", AuthChangepwdsuccHandler),
             (r"/video_feed", StreamHandler),
+            (r"/video_websocket", VideoSocketHandler), # Really slow! Do not use!
+            (r"/warning_websocket", WarningSocketHandler),
         ]
         settings = dict(
             web_title=u"Intelligent Monitor System",
@@ -131,6 +138,25 @@ class BaseHandler(tornado.web.RequestHandler):
             # print(user_id)
             self.current_user = await self.queryone("SELECT * FROM users WHERE id = %s",
                                                     int(user_id))
+
+# Really slow! Not using it!
+class VideoSocketHandler(tornado.websocket.WebSocketHandler):
+    def __init__(self, *args, **kwargs):
+        super(VideoSocketHandler, self).__init__(*args, **kwargs)
+    async def on_message(self, message):
+        img = cam2.get_frame()
+        img = base64.b64encode(img)
+        await self.write_message(img)
+
+class WarningSocketHandler(tornado.websocket.WebSocketHandler):
+    def __init__(self, *args, **kwargs):
+        super(WarningSocketHandler, self).__init__(*args, **kwargs)
+    
+    @tornado.web.asynchronous
+    @tornado.gen.coroutine
+    async def on_message(self, message):
+        pass
+
 
 class StreamHandler(tornado.web.RequestHandler):
     @tornado.web.asynchronous
@@ -326,4 +352,6 @@ async def main():
 
 if __name__ == "__main__":
     cam = video.UsbCamera()
+    cam2 = video.UsbCamera()
+    asyncio.set_event_loop_policy(tornado.platform.asyncio.AnyThreadEventLoopPolicy())
     tornado.ioloop.IOLoop.current().run_sync(main)

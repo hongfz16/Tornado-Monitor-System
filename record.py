@@ -13,6 +13,9 @@ def start_recording():
     width = None if len(sys.argv) <= 1 else int(sys.argv[1])
     height = None if len(sys.argv) <= 2 else int(sys.argv[2])
 
+    width = 640
+    height = 360
+
     # Create video capture object, retrying until successful.
     max_sleep = 5.0
     cur_sleep = 0.1
@@ -52,8 +55,9 @@ def start_recording():
         store.set('image', value)
         image_id = os.urandom(4)
         store.set('image_id', image_id)
-    print('Stop Recording...')
-        
         # Print the framerate.
         # text = '{:.2f}, {:.2f}, {:.2f} fps'.format(*fps.tick())
         # print(text)
+    print('Stop Recording...')
+        
+start_recording()
