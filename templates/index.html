@@ -2,50 +2,21 @@
 
 {% block head%}
 
-{% if current_user %}
-<script type="text/javascript" charset="utf-8">
-	$(document).ready(function(){
-		if ("WebSocket" in window) {
-			var ws_warning_path = 'ws://' + window.location.host + '/warning_websocket';
-			var ws_warning = new WebSocket(ws_warning_path);
-			ws_warning.onopen = function() {
-				ws_warning.send(1);
-                console.log("First sending request!")
-			};
-			ws_warning.onmessage = function(msg) {
-				$("#wswarning").text(msg.data);
-				ws_warning.send(1);
-                console.log("Sending request!")
-			};
-			ws_warning.onerror = function(e) {
-				console.log(e);
-				ws_warning.send(-1);
-			};
-		} else {
-			alert("WebSocket not supported");
-		}
-	});
-    window.onbeforeunload = function() {
-        ws_warning.send(-2)
-        ws_warning.onclose = function () {
-            console.log('Closing...');
-        }; // disable onclose handler first
-        ws_warning.close()
-    };
-</script>
-{% end %}
+	{% if current_user %}
+		<script type="text/javascript" charset="utf-8" src="{{ static_url("index.js") }}"></script>
+	{% end %}
 
 {% end %}
 
 {% block body%}
-<p>这里是ZS天眼的主页！</p>
+	<p>这里是ZS天眼的主页！</p>
 
-{% if current_user %}
-	<p id="wswarning"></p>
-	<img id="videofield" class="video" src="/video_feed"><br>
-	<!-- <img id="wscam" src="/"> -->
-{% else %}
-	<p>Please login to view webcam.</p>
-{% end %}
+	{% if current_user %}
+		<p id="wswarning"></p>
+		<img id="videofield" class="video" src="/video_feed"><br>
+		<!-- <img id="wscam" src="/"> -->
+	{% else %}
+		<p>Please login to view webcam.</p>
+	{% end %}
 
 {% end %}
