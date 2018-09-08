@@ -28,10 +28,7 @@ class UsbCamera(object):
         frame = cv2.resize(frame, (640, 360), interpolation=cv2.INTER_CUBIC)
         gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
         faces = self._face_cascade.detectMultiScale(gray, 1.3, 5)
-        if len(faces) > 0:
-            return True
-        else:
-            return False
+        return len(faces)
 
 # cam = UsbCamera()
 # while True:

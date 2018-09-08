@@ -164,7 +164,6 @@ class VideoSocketHandler(tornado.websocket.WebSocketHandler):
         img = base64.b64encode(img)
         await self.write_message(img)
 
-# @tornado.gen.coroutine
 def poll_have_face(last):
     while True:
         tmp = facedetect.have_face()
@@ -175,19 +174,14 @@ class WarningSocketHandler(tornado.websocket.WebSocketHandler):
     executor = ThreadPoolExecutor(10)
     def __init__(self, *args, **kwargs):
         super(WarningSocketHandler, self).__init__(*args, **kwargs)
-        self.last_have_face = False
-    
-    # @tornado.web.asynchronous
-    # @tornado.gen.coroutine
+        self.last_have_face = -1
+
     @run_on_executor
     def on_message(self, message):
         # i = fake_poll()
         # self.write_message(str(i)+' loops.')
         self.last_have_face = poll_have_face(self.last_have_face)
-        if self.last_have_face:
-            self.write_message('Face detected!')
-        else:
-            self.write_message('No face!')
+        self.write_message("找到{}张脸".format(self.last_have_face))
 
 class StreamHandler(tornado.web.RequestHandler):
     @tornado.gen.coroutine
@@ -390,8 +384,7 @@ async def main():
         await shutdown_event.wait()
 
 if __name__ == "__main__":
-    cam = video.UsbCamera()
-    cam2 = video.UsbCamera()
-    facedetect = video.UsbCamera()
     asyncio.set_event_loop_policy(tornado.platform.asyncio.AnyThreadEventLoopPolicy())
+    cam = video.UsbCamera()
+    facedetect = video.UsbCamera()
     tornado.ioloop.IOLoop.current().run_sync(main)

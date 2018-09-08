@@ -59,5 +59,3 @@ def start_recording():
         # text = '{:.2f}, {:.2f}, {:.2f} fps'.format(*fps.tick())
         # print(text)
     print('Stop Recording...')
-        
-start_recording()
