@@ -167,13 +167,13 @@ class VideoSocketHandler(tornado.websocket.WebSocketHandler):
 # @tornado.gen.coroutine
 def fake_poll():
     i = random.randint(5,9)
-    # i *= 1000000
-    # count = 0
-    # while True:
-    #     count += 1
-    #     if count >= i:
-    #         break
-    time.sleep(i)
+    i *= 1000000
+    count = 0
+    while True:
+        count += 1
+        if count >= i:
+            break
+    # time.sleep(i)
     return i
 
 class WarningSocketHandler(tornado.websocket.WebSocketHandler):
