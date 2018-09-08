@@ -18,6 +18,15 @@ class UsbCamera(object):
                 break
         self._prev_image_id = image_id
         image = self._store.get('image')
+
+        frame = self.decode_image(image)
+        gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+        faces = self._face_cascade.detectMultiScale(gray, 1.3, 5)
+
+        for (x,y,w,h) in faces:
+            cv2.rectangle(frame, (x,y), (x+w, y+h), (255,0,0), 2)
+        image = cv2.imencode('.jpg',frame)[1].tobytes()
+        
         return image
     def decode_image(self, imbytes):
         jpeg = np.asarray(bytearray(imbytes), dtype="uint8")

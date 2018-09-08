@@ -16,6 +16,7 @@ import tornado.web
 import tornado.websocket
 import unicodedata
 import asyncio
+import record
 from tornado.platform.asyncio import AnyThreadEventLoopPolicy
 from threading import Thread
 from tornado.concurrent import run_on_executor, return_future
@@ -164,24 +165,33 @@ class VideoSocketHandler(tornado.websocket.WebSocketHandler):
         img = base64.b64encode(img)
         await self.write_message(img)
 
-def poll_have_face(last):
-    while True:
+def poll_have_face(last, facedetect):
+    count = 100
+    while count >= 0:
+        count -= 1
         tmp = facedetect.have_face()
         if tmp != last:
             return tmp
+    return facedetect.have_face()
 
 class WarningSocketHandler(tornado.websocket.WebSocketHandler):
     executor = ThreadPoolExecutor(10)
     def __init__(self, *args, **kwargs):
+        self.facedetect = video.UsbCamera()
         super(WarningSocketHandler, self).__init__(*args, **kwargs)
         self.last_have_face = -1
 
     @run_on_executor
     def on_message(self, message):
-        # i = fake_poll()
-        # self.write_message(str(i)+' loops.')
-        self.last_have_face = poll_have_face(self.last_have_face)
-        self.write_message("找到{}张脸".format(self.last_have_face))
+        try:
+            self.last_have_face = poll_have_face(self.last_have_face, self.facedetect)
+        except:
+            print("Something happened while polling faces.")
+        try:
+            self.write_message("找到{}张脸".format(self.last_have_face))
+        except tornado.websocket.WebSocketClosedError:
+            print("Websocket disconnected!")
+
 
 class StreamHandler(tornado.web.RequestHandler):
     @tornado.gen.coroutine
@@ -385,6 +395,6 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.set_event_loop_policy(tornado.platform.asyncio.AnyThreadEventLoopPolicy())
+    recordThread = MultiThreadHandler(record.start_recording)
     cam = video.UsbCamera()
-    facedetect = video.UsbCamera()
     tornado.ioloop.IOLoop.current().run_sync(main)
