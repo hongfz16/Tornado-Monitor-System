@@ -1,3 +1,4 @@
+import time
 import aiopg
 import bcrypt
 import os.path
@@ -11,6 +12,8 @@ import tornado.locks
 import tornado.options
 import tornado.web
 import unicodedata
+
+import video
 
 from tornado.options import define, options
 
@@ -67,6 +70,7 @@ class Application(tornado.web.Application):
             (r"/auth/changepwd", AuthChangepwdHandler),
             (r"/auth/createuser", AuthCreateUserHandler),
             (r"/auth/changepwdsucc", AuthChangepwdsuccHandler),
+            (r"/video_feed", StreamHandler),
         ]
         settings = dict(
             web_title=u"Intelligent Monitor System",
@@ -127,6 +131,36 @@ class BaseHandler(tornado.web.RequestHandler):
             # print(user_id)
             self.current_user = await self.queryone("SELECT * FROM users WHERE id = %s",
                                                     int(user_id))
+
+class StreamHandler(tornado.web.RequestHandler):
+    @tornado.web.asynchronous
+    @tornado.gen.coroutine
+    def get(self):
+        ioloop = tornado.ioloop.IOLoop.current()
+
+        self.set_header('Cache-Control', 'no-store, no-cache, must-revalidate, pre-check=0, post-check=0, max-age=0')
+        self.set_header( 'Pragma', 'no-cache')
+        self.set_header( 'Content-Type', 'multipart/x-mixed-replace;boundary=--jpgboundary')
+        self.set_header('Connection', 'close')
+
+        self.served_image_timestamp = time.time()
+        my_boundary = "--jpgboundary"
+        while True:
+            # Generating images for mjpeg stream and wraps them into http resp
+            if self.get_argument('fd') == "true":
+                img = cam.get_frame(True)
+            else:
+                img = cam.get_frame(False)
+            interval = 0.05
+            if self.served_image_timestamp + interval < time.time():
+                self.write(my_boundary)
+                self.write("Content-type: image/jpeg\r\n")
+                self.write("Content-length: %s\r\n\r\n" % len(img))
+                self.write(img)
+                self.served_image_timestamp = time.time()
+                yield tornado.gen.Task(self.flush)
+            else:
+                yield tornado.gen.Task(ioloop.add_timeout, ioloop.time() + interval)
 
 class IndexHandler(BaseHandler):
     async def get(self):
@@ -270,7 +304,6 @@ class AuthCreateUserHandler(BaseHandler):
 
 async def main():
     tornado.options.parse_command_line()
-
     # Create the global connection pool.
     async with aiopg.create_pool(
             host=options.db_host,
@@ -292,4 +325,5 @@ async def main():
         await shutdown_event.wait()
 
 if __name__ == "__main__":
+    cam = video.UsbCamera()
     tornado.ioloop.IOLoop.current().run_sync(main)
