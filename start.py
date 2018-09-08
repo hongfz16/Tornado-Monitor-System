@@ -17,6 +17,7 @@ import tornado.websocket
 import unicodedata
 import asyncio
 import record
+import analyze
 from tornado.platform.asyncio import AnyThreadEventLoopPolicy
 from threading import Thread
 from tornado.concurrent import run_on_executor, return_future
@@ -402,5 +403,6 @@ async def main():
 if __name__ == "__main__":
     asyncio.set_event_loop_policy(tornado.platform.asyncio.AnyThreadEventLoopPolicy())
     recordThread = MultiThreadHandler(record.start_recording)
+    recordThread = MultiThreadHandler(analyze.analyze_cam)
     cam = video.UsbCamera()
     tornado.ioloop.IOLoop.current().run_sync(main)

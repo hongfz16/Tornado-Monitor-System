@@ -33,11 +33,8 @@ class UsbCamera(object):
         jpeg = cv2.imdecode(jpeg,cv2.IMREAD_COLOR)
         return jpeg
     def have_face(self):
-        frame = self.decode_image(self.get_frame())
-        frame = cv2.resize(frame, (640, 360), interpolation=cv2.INTER_CUBIC)
-        gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-        faces = self._face_cascade.detectMultiScale(gray, 1.3, 5)
-        return len(faces)
+        num = self._store.get('num_face')
+        return int(num)
 
 # cam = UsbCamera()
 # while True:

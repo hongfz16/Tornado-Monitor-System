@@ -2,6 +2,7 @@
 
 {% block head%}
 
+{% if current_user %}
 <script type="text/javascript" charset="utf-8">
 	$(document).ready(function(){
 		if ("WebSocket" in window) {
@@ -32,12 +33,19 @@
         ws_warning.close()
     };
 </script>
+{% end %}
 
 {% end %}
 
 {% block body%}
 <p>这里是ZS天眼的主页！</p>
-<p id="wswarning"></p>
-<img id="videofield" class="video" src="/video_feed"><br>
-<!-- <img id="wscam" src="/"> -->
+
+{% if current_user %}
+	<p id="wswarning"></p>
+	<img id="videofield" class="video" src="/video_feed"><br>
+	<!-- <img id="wscam" src="/"> -->
+{% else %}
+	<p>Please login to view webcam.</p>
+{% end %}
+
 {% end %}
