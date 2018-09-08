@@ -1,5 +1,6 @@
 import cv2
 import numpy as np
+import tornado
 
 class UsbCamera(object):
 
@@ -38,6 +39,7 @@ class UsbCamera(object):
             # bad params
             raise Exception('Not int value')
 
+    # @tornado.gen.coroutine
     def get_frame(self, fdenable):
         """
         functionality: Gets frame from camera and try to find feces on it
@@ -61,6 +63,8 @@ class UsbCamera(object):
         # encoding picture to jpeg
         # cv2.imshow('frame',image)
         ret, jpeg = cv2.imencode('.jpg', image)
+        # raise gen.Return(jpeg.tostring())
+        # res['img'] = jpeg.tostring()
         return jpeg.tostring()
 
 # cam = UsbCamera()

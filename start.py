@@ -12,6 +12,11 @@ import tornado.locks
 import tornado.options
 import tornado.web
 import unicodedata
+import asyncio
+from tornado.platform.asyncio import AnyThreadEventLoopPolicy
+from threading import Thread
+from tornado.concurrent import run_on_executor, return_future
+from concurrent.futures import ThreadPoolExecutor
 
 import video
 
@@ -132,7 +137,18 @@ class BaseHandler(tornado.web.RequestHandler):
             self.current_user = await self.queryone("SELECT * FROM users WHERE id = %s",
                                                     int(user_id))
 
+class MultiThreadHandler:
+    def __init__(self, func, *args):
+        self.thread = Thread(target = func, args=args)
+        self.thread.start()
+
+    def finish(self):
+        self.thread.join()
+
+
 class StreamHandler(tornado.web.RequestHandler):
+    # multithread = MultiThreadHandler()
+    # executor = ThreadPoolExecutor(8)
     @tornado.web.asynchronous
     @tornado.gen.coroutine
     def get(self):
@@ -148,8 +164,16 @@ class StreamHandler(tornado.web.RequestHandler):
         while True:
             # Generating images for mjpeg stream and wraps them into http resp
             if self.get_argument('fd') == "true":
+                # res = {}
+                # mt = MultiThreadHandler(cam.get_frame, True, res)
+                # mt.finish()
+                # img = res['img']
                 img = cam.get_frame(True)
             else:
+                # res = {}
+                # mt = MultiThreadHandler(cam.get_frame, False, res)
+                # mt.finish()
+                # img = res['img']
                 img = cam.get_frame(False)
             interval = 0.05
             if self.served_image_timestamp + interval < time.time():
@@ -326,4 +350,6 @@ async def main():
 
 if __name__ == "__main__":
     cam = video.UsbCamera()
+    # asyncio.set_event_loop(asyncio.new_event_loop())
+    # asyncio.set_event_loop_policy(tornado.platform.asyncio.AnyThreadEventLoopPolicy())
     tornado.ioloop.IOLoop.current().run_sync(main)
