@@ -36,6 +36,10 @@ class WarningSocketHandler(tornado.websocket.WebSocketHandler):
         super(WarningSocketHandler, self).__init__(*args, **kwargs)
         self.last_have_face = -1
 
+    def on_close(self):
+        # self.executor.shutdown(wait=True)
+        print("Connection closed by client.")
+
     @run_on_executor
     def on_message(self, message):
         try:

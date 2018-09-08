@@ -42,8 +42,8 @@ with open('secret.json','r') as f:
     define("db_password", default=db_data['Password'], help="database password")	
 
 define("port", default=8000, help="run on the given port", type=int)
-define("db_delete", default=True, help="Delte all the tables in db")
-define("db_createsuperuser", default=True, help="Create Superuser")
+define("db_delete", default=False, help="Delte all the tables in db")
+define("db_createsuperuser", default=False, help="Create Superuser")
 
 class IndexHandler(BaseHandler):
     async def get(self):
