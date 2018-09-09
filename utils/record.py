@@ -8,6 +8,8 @@ import cv2
 import numpy as np
 from redis import StrictRedis
 
+from .host import *
+
 def start_recording():
     # Retrieve command line arguments.
     width = None if len(sys.argv) <= 1 else int(sys.argv[1])
@@ -20,7 +22,8 @@ def start_recording():
     max_sleep = 5.0
     cur_sleep = 0.1
     while True:
-        cap = cv2.VideoCapture(0)
+        cap = cv2.VideoCapture('./utils/uncledrew.avi')
+        # cap = cv2.VideoCapture(0)
         if cap.isOpened():
             break
         print('not opened, sleeping {}s'.format(cur_sleep))
@@ -32,7 +35,7 @@ def start_recording():
         cur_sleep = 0.1
 
     # Create client to the Redis store.
-    store = StrictRedis(host='localhost', port=6379, db=0)
+    store = StrictRedis(host=redishost, port=6379, db=0)
 
     # Set video dimensions, if given.
     if width: cap.set(3, width)

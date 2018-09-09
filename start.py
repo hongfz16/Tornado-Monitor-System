@@ -32,18 +32,19 @@ from utils.mauth import *
 from utils.videostreamer import *
 from utils.warningpusher import *
 from utils.db_utils import *
+from utils.host import *
 
 with open('secret.json','r') as f:
     db_data = json.load(f)
-    define("db_host", default="127.0.0.1", help="database host")
+    define("db_host", default=postgreshost, help="database host")
     define("db_port", default=5432, help="database port")
     define("db_database", default=db_data['Database'], help="database name")
     define("db_user", default=db_data['Username'], help="database user")
     define("db_password", default=db_data['Password'], help="database password")	
 
 define("port", default=8000, help="run on the given port", type=int)
-define("db_delete", default=False, help="Delte all the tables in db")
-define("db_createsuperuser", default=False, help="Create Superuser")
+define("db_delete", default=True, help="Delte all the tables in db")
+define("db_createsuperuser", default=True, help="Create Superuser")
 
 class IndexHandler(BaseHandler):
     async def get(self):
@@ -88,12 +89,14 @@ async def main():
     tornado.options.parse_command_line()
     
     # Create the global connection pool.
+    print("Trying to connect to postgres...")
     async with aiopg.create_pool(
             host=options.db_host,
             port=options.db_port,
             user=options.db_user,
             password=options.db_password,
             dbname=options.db_database) as db:
+        print("Successfully connected to postgres!")
         if options.db_delete:
             await clear_db(db, './sql/delete.sql')
         await maybe_create_tables(db, './sql/schema.sql')
@@ -110,6 +113,8 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.set_event_loop_policy(tornado.platform.asyncio.AnyThreadEventLoopPolicy())
+    print("Trying to start recording and analyze thread...")
     recordThread = MultiThreadHandler(record.start_recording)
-    recordThread = MultiThreadHandler(analyze.analyze_cam)
+    analyzeThread = MultiThreadHandler(analyze.analyze_cam)
+    print("Successfully start 2 threads...")
     tornado.ioloop.IOLoop.current().run_sync(main)

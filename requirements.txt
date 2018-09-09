@@ -5,4 +5,3 @@ psycopg2_binary==2.7.5
 aiopg==0.15.0
 coils==1.0.9
 python_bcrypt==0.3.2
-psycopg2==2.7.5
