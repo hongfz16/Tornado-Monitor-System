@@ -1,9 +1,10 @@
+import face_recognition
 import cv2
 import time
 import numpy as np
 import redis
 import pickle
-import face_recognition
+import os
 
 redishost = 'redis'
 

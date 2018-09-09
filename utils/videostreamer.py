@@ -6,6 +6,7 @@ import aiopg
 import bcrypt
 import os.path
 import psycopg2
+import pickle
 import re
 import json
 import base64
@@ -36,11 +37,24 @@ class UsbCamera(object):
         image = self._store.get('image')
 
         frame = self.decode_image(image)
-        gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-        faces = self._face_cascade.detectMultiScale(gray, 1.3, 5)
 
-        for (x,y,w,h) in faces:
-            cv2.rectangle(frame, (x,y), (x+w, y+h), (255,0,0), 2)
+        facesp = self._store.get("faces")
+        faces = pickle.loads(facesp)
+        for face in faces:
+            # name = face['name']
+            (top, right, bottom, left) = face['location']
+            name = face['name']
+            # for (top, right, bottom, left), name in zip(face['location'], face['name']):
+            cv2.rectangle(frame, (left, top), (right, bottom), (0, 0, 255), 2)
+            cv2.rectangle(frame, (left, bottom - 35), (right, bottom), (0, 0, 255), cv2.FILLED)
+            font = cv2.FONT_HERSHEY_DUPLEX
+            cv2.putText(frame, name, (left + 6, bottom - 6), font, 1.0, (255, 255, 255), 1)
+
+        # gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+        # faces = self._face_cascade.detectMultiScale(gray, 1.3, 5)
+
+        # for (x,y,w,h) in faces:
+        #     cv2.rectangle(frame, (x,y), (x+w, y+h), (255,0,0), 2)
         image = cv2.imencode('.jpg',frame)[1].tobytes()
         
         return image

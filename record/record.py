@@ -10,20 +10,12 @@ from redis import StrictRedis
 
 redishost = 'redis'
 
-def start_recording():
-    # Retrieve command line arguments.
-    width = None if len(sys.argv) <= 1 else int(sys.argv[1])
-    height = None if len(sys.argv) <= 2 else int(sys.argv[2])
-
-    width = 640
-    height = 360
-
-    # Create video capture object, retrying until successful.
+def open_cap():
     max_sleep = 5.0
     cur_sleep = 0.1
     while True:
-        cap = cv2.VideoCapture('./trimed.mp4')
-        # cap = cv2.VideoCapture(0)
+        # cap = cv2.VideoCapture('./trimed.mp4')
+        cap = cv2.VideoCapture(0)
         if cap.isOpened():
             break
         print('not opened, sleeping {}s'.format(cur_sleep))
@@ -33,6 +25,20 @@ def start_recording():
             cur_sleep = min(cur_sleep, max_sleep)
             continue
         cur_sleep = 0.1
+    return cap
+
+def start_recording():
+    # Retrieve command line arguments.
+    width = None if len(sys.argv) <= 1 else int(sys.argv[1])
+    height = None if len(sys.argv) <= 2 else int(sys.argv[2])
+
+    width = 640
+    height = 360
+
+    # Create video capture object, retrying until successful.
+    cap = open_cap()
+    print("cap is opened!")
+
     mfps = cap.get(cv2.CAP_PROP_FPS)
 
     # Create client to the Redis store.
@@ -51,11 +57,19 @@ def start_recording():
     print('Start Recording...')
     while True:
         hello, image = cap.read()
-        image = cv2.resize(image, (width, height), interpolation=cv2.INTER_CUBIC)
-        time.sleep(1./int(mfps))
+        # if image is None:
+        #     cap.release()
+        #     # cap = cv2.VideoCapture(0)
+        #     cap = cv2.VideoCapture('./trimed.mp4')
+        #     cap = open_cap()
+        #     hello, image = cap.read()
+        #     print(None)
+        time.sleep(0.05)
         if image is None:
-            time.sleep(0.01)
+            time.sleep(0.5)
             continue
+        image = cv2.resize(image, (width, height), interpolation=cv2.INTER_CUBIC)
+
         _, image = cv2.imencode('.jpg', image)
         value = image.tobytes()
         store.set('image', value)
