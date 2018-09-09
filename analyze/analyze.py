@@ -3,7 +3,7 @@ import time
 import numpy as np
 import redis
 
-from .host import *
+redishost = 'redis'
 
 MAX_FPS = 100
 
@@ -28,3 +28,6 @@ def analyze_cam():
         gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
         faces = face_cascade.detectMultiScale(gray, 1.3, 5)
         store.set('num_face', len(faces))
+
+print("Start analyze...")
+analyze_cam()

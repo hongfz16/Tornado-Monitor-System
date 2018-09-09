@@ -16,15 +16,10 @@ async def clear_db(db, filename):
         await cur.execute(delsql)
 
 async def maybe_create_tables(db, filename):
-    try:
-        with (await db.cursor()) as cur:
-            await cur.execute("SELECT COUNT(*) FROM users LIMIT 1")
-            await cur.fetchone()
-    except psycopg2.ProgrammingError:
-        with open(filename, 'r') as f:
-            schema = f.read()
-        with (await db.cursor()) as cur:
-            await cur.execute(schema)
+    with open(filename, 'r') as f:
+        schema = f.read()
+    with (await db.cursor()) as cur:
+        await cur.execute(schema)
 
 async def create_superuser(db):
     with await(db.cursor()) as cur:

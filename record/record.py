@@ -8,7 +8,7 @@ import cv2
 import numpy as np
 from redis import StrictRedis
 
-from .host import *
+redishost = 'redis'
 
 def start_recording():
     # Retrieve command line arguments.
@@ -22,7 +22,7 @@ def start_recording():
     max_sleep = 5.0
     cur_sleep = 0.1
     while True:
-        cap = cv2.VideoCapture('./utils/uncledrew.avi')
+        cap = cv2.VideoCapture('./trimed.mp4')
         # cap = cv2.VideoCapture(0)
         if cap.isOpened():
             break
@@ -50,6 +50,7 @@ def start_recording():
     print('Start Recording...')
     while True:
         hello, image = cap.read()
+        time.sleep(0.05)
         if image is None:
             time.sleep(0.5)
             continue
@@ -62,3 +63,5 @@ def start_recording():
         # text = '{:.2f}, {:.2f}, {:.2f} fps'.format(*fps.tick())
         # print(text)
     print('Stop Recording...')
+
+start_recording()
