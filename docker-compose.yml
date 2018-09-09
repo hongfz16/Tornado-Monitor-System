@@ -10,8 +10,8 @@ services:
 
   record_thread:
     build: ./record
-    # devices:
-      # - /dev/video0:/dev/video0
+    devices:
+      - /dev/video0:/dev/video0
     depends_on:
       - redis
       - postgres
