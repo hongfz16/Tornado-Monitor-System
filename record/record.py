@@ -33,6 +33,7 @@ def start_recording():
             cur_sleep = min(cur_sleep, max_sleep)
             continue
         cur_sleep = 0.1
+    mfps = cap.get(cv2.CAP_PROP_FPS)
 
     # Create client to the Redis store.
     store = StrictRedis(host=redishost, port=6379, db=0)
@@ -50,9 +51,10 @@ def start_recording():
     print('Start Recording...')
     while True:
         hello, image = cap.read()
-        time.sleep(0.05)
+        image = cv2.resize(image, (width, height), interpolation=cv2.INTER_CUBIC)
+        time.sleep(1./int(mfps))
         if image is None:
-            time.sleep(0.5)
+            time.sleep(0.01)
             continue
         _, image = cv2.imencode('.jpg', image)
         value = image.tobytes()

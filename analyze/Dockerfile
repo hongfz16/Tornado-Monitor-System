@@ -16,9 +16,21 @@ RUN apt-get update && \
         libpng-dev \
         libtiff-dev \
         libavformat-dev \
-        libpq-dev
-
-RUN pip install numpy
+        libpq-dev \
+        gfortran \
+        wget \
+        curl \
+        graphicsmagick \
+        libgraphicsmagick1-dev \
+        libatlas-dev \
+        libavcodec-dev \
+        libgtk2.0-dev \
+        liblapack-dev \
+        python3-dev \
+        python3-numpy \
+        software-properties-common \
+        zip \
+        && apt-get clean && rm -rf /tmp/* /var/tmp/*
 
 WORKDIR /
 ENV OPENCV_VERSION="3.4.2"
@@ -45,7 +57,12 @@ RUN wget https://github.com/opencv/opencv/archive/${OPENCV_VERSION}.zip \
       .. \
     && make install \
     && rm /${OPENCV_VERSION}.zip \
-    && rm -r /opencv-${OPENCV_VERSION}
+    && rm -r /opencv-${OPENCV_VERSION} \
+    && cd ~ && \
+    mkdir -p dlib && \
+    git clone -b 'v19.9' --single-branch https://github.com/davisking/dlib.git dlib/ && \
+    cd  dlib/ && \
+    python3 setup.py install --yes USE_AVX_INSTRUCTIONS
 
 RUN mkdir -p /usr/src/app
 WORKDIR /usr/src/app
