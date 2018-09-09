@@ -1,0 +1,39 @@
+version: '3'
+services:
+
+  tornado_monitor:
+    build: .
+    # command: python3 start.py
+    volumes:
+      - .:/usr/src/app
+    devices:
+      - /dev/video0:/dev/video0
+    ports:
+      - 8000:8000
+    depends_on:
+      - postgres
+      - redis
+
+  redis:
+    image: redis
+    expose:
+      - "6379"
+    # ports:
+      # - "6379:6379"
+
+  postgres:
+    restart: always
+    image: postgres
+    expose:
+      - "5432"
+    # ports:
+    #   - "5432:5432"
+    environment:
+      POSTGRES_USER: "tornado"
+      POSTGRES_PASSWORD: "ttasw1234"
+      POSTGRES_DB: "tornado_dev"
+    volumes:
+      - pgdata:/var/lib/postgresql/data/
+
+volumes:
+  pgdata:

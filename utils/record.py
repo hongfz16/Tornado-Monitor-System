@@ -30,9 +30,10 @@ def start_recording():
             cur_sleep = min(cur_sleep, max_sleep)
             continue
         cur_sleep = 0.1
+    print("cap is opened!")
 
     # Create client to the Redis store.
-    store = StrictRedis(host='localhost', port=6379, db=0)
+    store = StrictRedis(host='redis', port=6379, db=0)
 
     # Set video dimensions, if given.
     if width: cap.set(3, width)

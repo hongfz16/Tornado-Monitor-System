@@ -21,7 +21,7 @@ MAX_FPS = 100
 
 class UsbCamera(object):
     def __init__(self):
-        self._store = redis.StrictRedis(host='localhost', port=6379, db=0)
+        self._store = redis.StrictRedis(host='redis', port=6379, db=0)
         self._prev_image_id = None
         self._face_cascade = cv2.CascadeClassifier('face.xml')
     def get_frame(self):

@@ -15,6 +15,8 @@ import tornado.web
 import unicodedata
 import asyncio
 
+from utils.noresulterror import NoResultError
+
 class BaseHandler(tornado.web.RequestHandler):
     def row_to_obj(self, row, cur):
         """Convert a SQL row to an object supporting dict and attribute access."""
