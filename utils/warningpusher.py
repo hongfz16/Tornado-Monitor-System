@@ -58,10 +58,7 @@ class WarningSocketHandler(tornado.websocket.WebSocketHandler):
         try:
             strmess = ""
             for w in warning:
-                strmess += '<p>'
-                strmess += '{} {} at {}'.format(w['name'],w['type'],w['time'])
-                strmess += '</p>\n'
-            print(strmess)
+                strmess += '{} {} at {}. '.format(w['name'],w['type'],w['time'])
             self.write_message(strmess)
         except tornado.websocket.WebSocketClosedError:
             print("Websocket disconnected!")

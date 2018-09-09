@@ -64,18 +64,22 @@ def analyze_cam():
                 warning_id = os.urandom(4)
                 warnings = []
                 for GetInName in GetIn:
+                    if (GetInName == 'Unknown'):
+                        continue
                     warning = {}
                     warning['name'] = GetInName
                     warning['time'] = current
                     warning['type'] = 'in'
                     warnings.append(warning)
                 for GetOutName in GetOut:
+                    if (GetOutName == 'Unknown'):
+                        continue
                     warning = {}
                     warning['name'] = GetOutName
                     warning['time'] = current
                     warning['type'] = 'out'
                     warnings.append(warning)
-                print(warnings)
+                # print(warnings)
                 store.set("warning_id", warning_id)
                 store.set("warning", pickle.dumps(warnings))
 
