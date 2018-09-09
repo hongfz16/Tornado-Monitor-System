@@ -3,6 +3,8 @@ import time
 import numpy as np
 import redis
 
+from .host import *
+
 MAX_FPS = 100
 
 def decode_image(imbytes):
@@ -11,7 +13,7 @@ def decode_image(imbytes):
     return jpeg
 
 def analyze_cam():
-    store = redis.StrictRedis(host='redis', port=6379, db=0)
+    store = redis.StrictRedis(host=redishost, port=6379, db=0)
     prev_image_id = None
     face_cascade = cv2.CascadeClassifier('face.xml')
     while True:
