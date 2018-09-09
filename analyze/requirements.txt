@@ -1,2 +1,3 @@
 numpy==1.15.0
 redis==2.10.6
+face_recognition

@@ -42,11 +42,13 @@ class UsbCamera(object):
         faces = pickle.loads(facesp)
         for face in faces:
             # name = face['name']
-            for (top, right, bottom, left), name in zip(face['location'], face['name']):
-                cv2.rectangle(frame, (left, top), (right, bottom), (0, 0, 255), 2)
-                cv2.rectangle(frame, (left, bottom - 35), (right, bottom), (0, 0, 255), cv2.FILLED)
-                font = cv2.FONT_HERSHEY_DUPLEX
-                cv2.putText(frame, name, (left + 6, bottom - 6), font, 1.0, (255, 255, 255), 1)
+            (top, right, bottom, left) = face['location']
+            name = face['name']
+            # for (top, right, bottom, left), name in zip(face['location'], face['name']):
+            cv2.rectangle(frame, (left, top), (right, bottom), (0, 0, 255), 2)
+            cv2.rectangle(frame, (left, bottom - 35), (right, bottom), (0, 0, 255), cv2.FILLED)
+            font = cv2.FONT_HERSHEY_DUPLEX
+            cv2.putText(frame, name, (left + 6, bottom - 6), font, 1.0, (255, 255, 255), 1)
 
         # gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
         # faces = self._face_cascade.detectMultiScale(gray, 1.3, 5)

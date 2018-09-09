@@ -16,7 +16,21 @@ RUN apt-get update && \
         libpng-dev \
         libtiff-dev \
         libavformat-dev \
-        libpq-dev
+        libpq-dev \
+        gfortran \
+        wget \
+        curl \
+        graphicsmagick \
+        libgraphicsmagick1-dev \
+        libatlas-dev \
+        libavcodec-dev \
+        libgtk2.0-dev \
+        liblapack-dev \
+        python3-dev \
+        python3-numpy \
+        software-properties-common \
+        zip \
+        && apt-get clean && rm -rf /tmp/* /var/tmp/*
 
 RUN pip install numpy
 
@@ -45,11 +59,16 @@ RUN wget https://github.com/opencv/opencv/archive/${OPENCV_VERSION}.zip \
       .. \
     && make -j8 install \
     && rm /${OPENCV_VERSION}.zip \
-    && rm -r /opencv-${OPENCV_VERSION}
+    && rm -r /opencv-${OPENCV_VERSION} \
+    && cd ~ && \
+    mkdir -p dlib && \
+    git clone -b 'v19.9' --single-branch https://github.com/davisking/dlib.git dlib/ && \
+    cd  dlib/ && \
+    python3 setup.py install --yes USE_AVX_INSTRUCTIONS
 
 RUN mkdir -p /usr/src/app
 WORKDIR /usr/src/app
 COPY requirements.txt /usr/src/app/
 RUN pip install --no-cache-dir -r requirements.txt
 COPY . /usr/src/app
-CMD ["python", "-u", "analyze.py"]
+CMD ["python3", "-u", "analyze.py"]
