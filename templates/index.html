@@ -12,8 +12,8 @@
 	<p>这里是ZS天眼的主页！</p>
 
 	{% if current_user %}
-		<p id="wswarning"></p>
 		<img id="videofield" class="video" src="/video_feed"><br>
+		<div id="wswarning"></div>
 		<!-- <img id="wscam" src="/"> -->
 	{% else %}
 		<p>Please login to view webcam.</p>
