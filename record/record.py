@@ -14,8 +14,8 @@ def open_cap():
     max_sleep = 5.0
     cur_sleep = 0.1
     while True:
-        # cap = cv2.VideoCapture('./trimed.mp4')
-        cap = cv2.VideoCapture(0)
+        cap = cv2.VideoCapture('./trimed.mp4')
+        # cap = cv2.VideoCapture(0)
         if cap.isOpened():
             break
         print('not opened, sleeping {}s'.format(cur_sleep))

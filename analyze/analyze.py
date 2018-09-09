@@ -20,6 +20,7 @@ def analyze_cam():
     prev_image_id = None
     # face_cascade = cv2.CascadeClassifier('face.xml')
     analyze_this_frame = True
+    last_detected = set()
     while True:
         while True:
             time.sleep(1./MAX_FPS)
@@ -27,9 +28,11 @@ def analyze_cam():
             if image_id != prev_image_id:
                 break
         if analyze_this_frame:
+            current = time.strftime('%Y.%m.%d %H:%M:%S',time.localtime(time.time()))
             prev_image_id = image_id
             image = store.get('image')
             frame = decode_image(image)
+            detected = set()
 
             # gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
             # faces = face_cascade.detectMultiScale(gray, 1.3, 5)
@@ -49,9 +52,39 @@ def analyze_cam():
                 if True in matches:
                     first_match_index = matches.index(True)
                     name = known_face_names[first_match_index]
+                if name in detected:
+                    name = "Unknown"
+                else:
+                    detected.add(name)
                 faces.append({"name":name, "location":face_location})
-            store.set("faces",pickle.dumps(faces))
 
+            GetIn = detected - last_detected
+            GetOut = last_detected - detected
+            if len(GetIn | GetOut) > 0:
+                warning_id = os.urandom(4)
+                warnings = []
+                for GetInName in GetIn:
+                    if (GetInName == 'Unknown'):
+                        continue
+                    warning = {}
+                    warning['name'] = GetInName
+                    warning['time'] = current
+                    warning['type'] = 'in'
+                    warnings.append(warning)
+                for GetOutName in GetOut:
+                    if (GetOutName == 'Unknown'):
+                        continue
+                    warning = {}
+                    warning['name'] = GetOutName
+                    warning['time'] = current
+                    warning['type'] = 'out'
+                    warnings.append(warning)
+                # print(warnings)
+                store.set("warning_id", warning_id)
+                store.set("warning", pickle.dumps(warnings))
+
+            store.set("faces",pickle.dumps(faces))
+            last_detected = detected
         analyze_this_frame = not analyze_this_frame
 
 
@@ -62,6 +95,8 @@ if __name__ == "__main__":
     path = './known_faces/'
     dirs = os.listdir(path)
     for filename in dirs:
+        if filename == '.DS_Store':
+            continue
         name = filename.split('.')[0]
         img = face_recognition.load_image_file(path+filename)
         img_encoding = face_recognition.face_encodings(img)[0]
