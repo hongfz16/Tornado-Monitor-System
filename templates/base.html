@@ -5,10 +5,35 @@
     <title>{{ escape(handler.settings["web_title"]) }}</title>
     <link rel="stylesheet" href="{{ static_url("index.css") }}" type="text/css">
     <script src="http://code.jquery.com/jquery-1.10.1.min.js"></script>
+    <link href="https://cdn.bootcss.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.bootcss.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
     <!-- <link rel="alternate" href="/feed" type="application/atom+xml" title="{{ escape(handler.settings["web_title"]) }}"> -->
     {% block head %}{% end %}
     <script type="text/javascript">
     </script>
+    <style>
+        .mycenter
+        {
+            margin-top: 100px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 350px;
+            width: 500px;
+            padding: 5%;
+            padding-left: 5%;
+            padding-right: 5%;
+        }
+        .mycenter mysign
+        {
+            width: 440px;
+        }
+        .mycenter input
+        {
+            margin-top: 2%;
+            margin-left: 10%;
+            margin-right: 10%;
+        }
+    </style>
   </head>
   <body>
     <div id="body">

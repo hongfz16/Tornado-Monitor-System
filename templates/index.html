@@ -9,11 +9,14 @@
 {% end %}
 
 {% block body%}
-	<p>这里是ZS天眼的主页！</p>
-
+	<div class="col-lg-11 text-center text-info" style="color: black">
+		<h2>这里是ZS天眼的主页！</h2>
+	</div>
 	{% if current_user %}
-		<img id="videofield" class="video" src="/video_feed"><br>
-		<div id="wswarning"></div>
+		<!-- <div class="mecenter"> -->
+			<img id="videofield" class="video" src="/video_feed"><br>
+			<div id="wswarning"></div>
+		<!-- </div> -->
 		<!-- <img id="wscam" src="/"> -->
 	{% else %}
 		<p>Please login to view webcam.</p>
