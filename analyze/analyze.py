@@ -75,7 +75,7 @@ def analyze_cam():
                     warning['time'] = current
                     warning['type'] = 'out'
                     warnings.append(warning)
-
+                print(warnings)
                 store.set("warning_id", warning_id)
                 store.set("warning", pickle.dumps(warnings))
 
