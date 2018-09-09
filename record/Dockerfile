@@ -47,9 +47,13 @@ RUN wget https://github.com/opencv/opencv/archive/${OPENCV_VERSION}.zip \
     && rm /${OPENCV_VERSION}.zip \
     && rm -r /opencv-${OPENCV_VERSION}
 
+
 RUN mkdir -p /usr/src/app
 WORKDIR /usr/src/app
+
 COPY requirements.txt /usr/src/app/
 RUN pip install --no-cache-dir -r requirements.txt
-COPY . /usr/src/app
-CMD ["python","-u", "start.py"]
+
+COPY . .
+
+CMD ["python3", "-u", "record.py"]

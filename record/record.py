@@ -8,21 +8,13 @@ import cv2
 import numpy as np
 from redis import StrictRedis
 
-from .host import *
+redishost = 'redis'
 
-def start_recording():
-    # Retrieve command line arguments.
-    width = None if len(sys.argv) <= 1 else int(sys.argv[1])
-    height = None if len(sys.argv) <= 2 else int(sys.argv[2])
-
-    width = 640
-    height = 360
-
-    # Create video capture object, retrying until successful.
+def open_cap():
     max_sleep = 5.0
     cur_sleep = 0.1
     while True:
-        # cap = cv2.VideoCapture('./utils/uncledrew.avi')
+        # cap = cv2.VideoCapture('./trimed.mp4')
         cap = cv2.VideoCapture(0)
         if cap.isOpened():
             break
@@ -33,6 +25,18 @@ def start_recording():
             cur_sleep = min(cur_sleep, max_sleep)
             continue
         cur_sleep = 0.1
+    return cap
+
+def start_recording():
+    # Retrieve command line arguments.
+    width = None if len(sys.argv) <= 1 else int(sys.argv[1])
+    height = None if len(sys.argv) <= 2 else int(sys.argv[2])
+
+    width = 640
+    height = 360
+
+    # Create video capture object, retrying until successful.
+    cap = open_cap()
     print("cap is opened!")
 
     # Create client to the Redis store.
@@ -52,8 +56,16 @@ def start_recording():
     while True:
         hello, image = cap.read()
         if image is None:
-            time.sleep(0.5)
-            continue
+            cap.release()
+            cap = cv2.VideoCapture('./trimed.mp4')
+            cap = open_cap()
+            hello, image = cap.read()
+            print(None)
+        time.sleep(0.05)
+        # if image is None:
+        #     time.sleep(0.5)
+        #     continue
+        image = cv2.resize(image, (width, height), interpolation=cv2.INTER_CUBIC)
         _, image = cv2.imencode('.jpg', image)
         value = image.tobytes()
         store.set('image', value)
@@ -63,3 +75,5 @@ def start_recording():
         # text = '{:.2f}, {:.2f}, {:.2f} fps'.format(*fps.tick())
         # print(text)
     print('Stop Recording...')
+
+start_recording()

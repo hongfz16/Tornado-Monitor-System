@@ -1,4 +1,5 @@
 .DS_Store
 secret.json
 __pycache__
+*.mp4
 *.avi

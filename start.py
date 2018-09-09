@@ -25,8 +25,8 @@ from tornado.concurrent import run_on_executor, return_future
 from tornado.options import define, options
 from tornado.platform.asyncio import AnyThreadEventLoopPolicy
 
-from utils import analyze
-from utils import record
+# from utils import analyze
+# from utils import record
 from utils.noresulterror import NoResultError
 from utils.mauth import *
 from utils.videostreamer import *
@@ -99,7 +99,7 @@ async def main():
         print("Successfully connected to postgres!")
         if options.db_delete:
             await clear_db(db, './sql/delete.sql')
-        await maybe_create_tables(db, './sql/schema.sql')
+            await maybe_create_tables(db, './sql/schema.sql')
         if options.db_createsuperuser:
             await create_superuser(db)
         app = Application(db)
@@ -113,8 +113,8 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.set_event_loop_policy(tornado.platform.asyncio.AnyThreadEventLoopPolicy())
-    print("Trying to start recording and analyze thread...")
-    recordThread = MultiThreadHandler(record.start_recording)
-    analyzeThread = MultiThreadHandler(analyze.analyze_cam)
-    print("Successfully start 2 threads...")
+    # print("Trying to start recording and analyze thread...")
+    # recordThread = MultiThreadHandler(record.start_recording)
+    # analyzeThread = MultiThreadHandler(analyze.analyze_cam)
+    # print("Successfully start 2 threads...")
     tornado.ioloop.IOLoop.current().run_sync(main)

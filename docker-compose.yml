@@ -1,12 +1,25 @@
 version: '3'
 services:
 
+  analyze_thread:
+    build: ./analyze
+    depends_on:
+      - record_thread
+      - redis
+      - postgres
+
+  record_thread:
+    build: ./record
+    devices:
+      - /dev/video0:/dev/video0
+    depends_on:
+      - redis
+      - postgres
+
   tornado_monitor:
     build: .
     volumes:
       - .:/usr/src/app
-    # devices:
-    #   - /dev/video0:/dev/video0
     ports:
       - "8000:8000"
     expose:
@@ -14,6 +27,11 @@ services:
     depends_on:
       - postgres
       - redis
+      - analyze_thread
+      - record_thread
+    links:
+      - redis
+      - postgres
 
   redis:
     image: redis
@@ -23,7 +41,7 @@ services:
       # - "6379:6379"
 
   postgres:
-    restart: always
+    # restart: always
     image: postgres
     expose:
       - "5432"
@@ -40,6 +58,8 @@ services:
     build: ./nginx
     ports:
       - '80:80'
+    depends_on:
+      - tornado_monitor
     volumes:
       - ./static:/static
 
