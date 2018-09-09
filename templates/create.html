@@ -1,7 +1,32 @@
 {% extends "base.html" %}
 
 {% block body %}
-{% if error %}
+
+<div class="col-lg-11 text-center text-info">
+	<h2>Create User</h2>
+	{% if error %}
+		<span style="color: red">Error: {{ error }}</span><p>
+	{% end %}
+</div>
+<div class='mycenter'>
+<form action="/auth/createuser" method="POST">
+	<div class="col-lg-10">
+		<input name="email" class="form-control" type="text" placeholder="Please input E-mail">
+	</div>
+	<div class="col-lg-10">
+		<input name="name" class="form-control" type="text" placeholder="Please input name">
+	</div>
+	<div class="col-lg-10">
+		<input name="password" class="form-control" type="password" placeholder="Please input password">
+	</div>
+  	{% module xsrf_form_html() %}
+  	<div class="col-lg-10">
+  		<input type="submit" value="Create" class="btn btn-sm btn-primary btn-block">
+  	</div>
+</form>
+</div>
+
+<!-- {% if error %}
 <span style="color: red">Error: {{ error }}</span><p>
 {% end %}
 
@@ -11,5 +36,5 @@
   Password: <input name="password" type="password"><br>
   {% module xsrf_form_html() %}
   <input type="submit" value="Create">
-</form>
+</form> -->
 {% end %}

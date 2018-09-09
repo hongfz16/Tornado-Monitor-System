@@ -28,7 +28,7 @@ def analyze_cam():
             if image_id != prev_image_id:
                 break
         if analyze_this_frame:
-            current = time.strftime('%Y.%m.%d %H:%M:%S',time.localtime(time.time()))
+            current = time.strftime('%Y.%m.%d %H:%M:%S',time.localtime(time.time()+28800))
             prev_image_id = image_id
             image = store.get('image')
             frame = decode_image(image)

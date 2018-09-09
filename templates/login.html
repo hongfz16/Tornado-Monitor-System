@@ -1,14 +1,24 @@
 {% extends "base.html" %}
 
 {% block body %}
-{% if error %}
-<span style="color: red">Error: {{ error }}</span><p>
-{% end %}
-
+<div class="col-lg-11 text-center text-info">
+	<h2>Please log in</h2>
+	{% if error %}
+		<span style="color: red">Error: {{ error }}</span><p>
+	{% end %}
+</div>
+<div class='mycenter'>
 <form action="/auth/login" method="POST">
-  Email: <input name="email" type="text"><br>
-  Password: <input name="password" type="password"><br>
-  {% module xsrf_form_html() %}
-  <input type="submit" value="Submit">
+	<div class="col-lg-10">
+		<input name="email" class="form-control" type="text" placeholder="Please input E-mail">
+	</div>
+	<div class="col-lg-10">
+		<input name="password" class="form-control" type="password" placeholder="Please input password">
+	</div>
+  	{% module xsrf_form_html() %}
+  	<div class="col-lg-10">
+  		<input type="submit" value="Submit" class="btn btn-sm btn-primary btn-block">
+  	</div>
 </form>
+</div>
 {% end %}

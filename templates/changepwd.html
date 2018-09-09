@@ -1,7 +1,31 @@
 {% extends "base.html" %}
 
 {% block body %}
-{% if error %}
+<div class="col-lg-11 text-center text-info">
+	<h2>Change Password</h2>
+	{% if error %}
+		<span style="color: red">Error: {{ error }}</span><p>
+	{% end %}
+</div>
+<div class='mycenter'>
+<form action="/auth/changepwd" method="POST">
+	<div class="col-lg-10">
+		<input name="originalpassword" class="form-control" type="text" placeholder="Please input original password">
+	</div>
+	<div class="col-lg-10">
+		<input name="newpassword" class="form-control" type="text" placeholder="Please input new password">
+	</div>
+	<div class="col-lg-10">
+		<input name="newpasswordagain" class="form-control" type="password" placeholder="Please confirm new password">
+	</div>
+  	{% module xsrf_form_html() %}
+  	<div class="col-lg-10">
+  		<input type="submit" value="Submit" class="btn btn-sm btn-primary btn-block">
+  	</div>
+</form>
+</div>
+
+<!-- {% if error %}
 <span style="color: red">Error: {{ error }}</span><p>
 {% end %}
 
@@ -11,5 +35,5 @@
   New Password Again: <input name="newpasswordagain" type="password"><br>
   {% module xsrf_form_html() %}
   <input type="submit" value="Submit">
-</form>
+</form> -->
 {% end %}
