@@ -56,10 +56,12 @@ class WarningSocketHandler(tornado.websocket.WebSocketHandler):
             print("Something happened while polling faces.")
             return
         try:
-            strmess = ""
+            mess = {}
+            strmess = []
             for w in warning:
-                strmess += '<p>{} {} at {}</p>'.format(w['name'],w['type'],w['time'])
-            self.write_message(strmess)
+                strmess.append('{} {} at {}'.format(w['name'],w['type'],w['time']))
+            mess['str'] = strmess
+            self.write_message(mess)
         except tornado.websocket.WebSocketClosedError:
             print("Websocket disconnected!")
         except:

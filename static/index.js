@@ -7,8 +7,10 @@ $(document).ready(function(){
             console.log("First sending request!")
 		};
 		ws_warning.onmessage = function(msg) {
-			data = $.parseJSON(evt.data)
-			$("#wswarning").append(msg.data+"<br>");
+			data = $.parseJSON(msg.data)
+			data = data["str"]
+			for(var i=0; i<data.length; ++i):
+				$("#wswarning").append(data[i]+"<br>");
 			ws_warning.send(1);
             console.log("Sending request!")
 		};
