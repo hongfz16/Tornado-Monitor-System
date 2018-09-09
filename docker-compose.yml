@@ -3,7 +3,6 @@ services:
 
   analyze_thread:
     build: ./analyze
-    command: python3 analyze.py
     depends_on:
       - record_thread
       - redis
@@ -11,7 +10,6 @@ services:
 
   record_thread:
     build: ./record
-    command: python3 record.py
     depends_on:
       - redis
       - postgres
