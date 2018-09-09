@@ -25,8 +25,6 @@ from tornado.concurrent import run_on_executor, return_future
 from tornado.options import define, options
 from tornado.platform.asyncio import AnyThreadEventLoopPolicy
 
-# from utils import analyze
-# from utils import record
 from utils.noresulterror import NoResultError
 from utils.mauth import *
 from utils.videostreamer import *

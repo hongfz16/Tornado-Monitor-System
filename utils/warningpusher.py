@@ -7,6 +7,8 @@ import re
 import json
 import base64
 import random
+import pickle
+import redis
 import tornado.escape
 import tornado.httpserver
 import tornado.ioloop
@@ -18,26 +20,27 @@ import asyncio
 from tornado.concurrent import run_on_executor
 from threading import Thread
 from concurrent.futures import ThreadPoolExecutor
-from .videostreamer import UsbCamera
+from .host import *
 
-def poll_have_face(last, facedetect):
-    # print("get into poll_have face")
-    count = 100
-    while count >= 0:
-        count -= 1
-        tmp = facedetect.have_face()
-        if tmp != last:
-            # print("return from poll_have face1")
-            return tmp
-    # print("return from poll_have face2")
-    return facedetect.have_face()
+MAX_FPS = 100
+
+def poll_warning_info(last_warning_id, store):
+    re_id = None
+    while True:
+        time.sleep(1./MAX_FPS)
+        warning_id = store.get("warning_id")
+        if warning_id != last_warning_id:
+            re_id = warning_id
+            break
+    warning_list = pickle.loads(store.get("warning"))
+    return (re_id, warning_list)
 
 class WarningSocketHandler(tornado.websocket.WebSocketHandler):
     executor = ThreadPoolExecutor(10)
     def __init__(self, *args, **kwargs):
-        self.facedetect = UsbCamera()
         super(WarningSocketHandler, self).__init__(*args, **kwargs)
-        self.last_have_face = -1
+        self.last_warning_id = None
+        self.store = redis.StrictRedis(host=redishost, port=6379, db=0)
 
     def on_close(self):
         # self.executor.shutdown(wait=True)
@@ -47,14 +50,18 @@ class WarningSocketHandler(tornado.websocket.WebSocketHandler):
     def on_message(self, message):
         # print("on_message")
         try:
-            self.last_have_face = poll_have_face(self.last_have_face, self.facedetect)
+            (self.last_warning_id, warning) = poll_warning_info(self.last_warning_id, self.store)
             # print(self.last_have_face)
         except:
             print("Something happened while polling faces.")
             return
-
         try:
-            self.write_message("找到{}张脸".format(self.last_have_face))
+            strmess = ""
+            for w in warning:
+                strmess += '<p>'
+                strmess += '{} {} at {}'.format(w['name'],w['type'],w['time'])
+                strmess += '</p>\n'
+            self.write_message()
         except tornado.websocket.WebSocketClosedError:
             print("Websocket disconnected!")
         except:
