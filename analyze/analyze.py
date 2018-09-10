@@ -138,7 +138,7 @@ async def analyze_cam(db, known_face_encodings, known_face_names):
                 store.set("warning_id", warning_id)
                 store.set("warning", pickle.dumps(warnings))
                 for name in outers:
-                    await add_one_warning(db, name, inCamTime[name], current, base64.b64encode(frame))
+                    await add_one_warning(db, name, inCamTime[name], current, base64.b64encode(cv2.imencode('.jpg',frame)[1]))
                     del inCamTime[name]
                 # await add_one_warning(db, warnings, image)
                 # os.system('curl http://tornado_monitor:8000/new_warning')

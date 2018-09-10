@@ -1,7 +1,10 @@
+import cv2
+import numpy as np
 import time
 import aiopg
 import bcrypt
 import os.path
+import io
 import psycopg2
 import re
 import json
@@ -61,8 +64,11 @@ class HistoryWarningHandler(BaseHandler):
             ans['name'] = result['name']
             ans['intime'] = result['intime']
             ans['outtime'] = result['outtime']
-            ans['image'] = result['image']
+            ans['image'] = result['image'].tobytes()
+            # print(jpeg)
+            # ans['image'] = base64.b64encode(jpeg)
             # print(type(ans['image']))
+            # print(type(ans['image'].tobytes()))
             # ans['currentpage'] = page
 
             context.append(ans)
