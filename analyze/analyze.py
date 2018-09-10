@@ -6,6 +6,7 @@ import redis
 import pickle
 import os
 import json
+import requests
 import tornado
 from tornado.options import define, options
 from db_utils import *
@@ -101,6 +102,7 @@ async def analyze_cam(db, known_face_encodings, known_face_names):
 
             # small_frame = cv2.resize(frame, (0, 0), fx=0.25, fy=0.25)
             # Convert the image from BGR color (which OpenCV uses) to RGB color (which face_recognition uses)
+            # small_frame = cv2.resize(frame, (0, 0), fx=0.75, fy=0.75)
             rgb_small_frame = frame[:, :, ::-1]
             face_locations = face_recognition.face_locations(rgb_small_frame)
             face_encodings = face_recognition.face_encodings(rgb_small_frame, face_locations)
@@ -117,7 +119,7 @@ async def analyze_cam(db, known_face_encodings, known_face_names):
                     name = "Unknown"
                 else:
                     detected.add(name)
-                faces.append({"name":name, "location":face_location})
+                faces.append({"name":name, "location":face_location})#[lo for lo in face_location]})
 
             warning_id , warnings = getWarnings(detected, detected_history, current)
             detected_history.pop()
@@ -126,6 +128,8 @@ async def analyze_cam(db, known_face_encodings, known_face_names):
                 store.set("warning_id", warning_id)
                 store.set("warning", pickle.dumps(warnings))
                 await add_one_warning(db, warnings, image)
+                # os.system('curl http://tornado_monitor:8000/new_warning')
+                requests.get('http://tornado_monitor:8000/new_warning')
             # GetIn = detected - last_detected
             # GetOut = last_detected - detected
             # if len(GetIn | GetOut) > 0:
