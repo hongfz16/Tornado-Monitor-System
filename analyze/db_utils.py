@@ -22,7 +22,7 @@ async def maybe_create_tables(db, filename):
     with (await db.cursor()) as cur:
         await cur.execute(schema)
 
-async def add_one_warning(db, warning, image):
+async def add_one_warning(db, name, intime, outtime, image):
     with await(db.cursor()) as cur:
         # user_email = "su@su.com"
         # user_name = "su"
@@ -31,6 +31,6 @@ async def add_one_warning(db, warning, image):
         #         bcrypt.gensalt())
         # user_hashed_password = tornado.escape.to_unicode(user_hashed_password)
         # print("before INSERT into warnings")
-        await cur.execute("INSERT INTO warnings (warning, image) VALUES (%s, %s)",
-                                        (pickle.dumps(warning), image))
+        await cur.execute("INSERT INTO warnings (name, intime, outtime, image) VALUES (%s, %s, %s, %s)",
+                                        (name, intime, outtime, image))
         # print("after INSERT into warnings")

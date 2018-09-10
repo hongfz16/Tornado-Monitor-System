@@ -3,9 +3,11 @@ import cv2
 import time
 import numpy as np
 import redis
+import base64
 import pickle
 import os
 import json
+import requests
 import tornado
 from tornado.options import define, options
 from db_utils import *
@@ -52,7 +54,7 @@ def isOut(name, detected, detected_history):
                 return False
     return True
 
-def getWarnings(detecteds, inCam, current):
+def getWarnings(detecteds, inCam, inCamTime, current):
     warnings = []
     for name in detecteds[0]:
         if name == 'Unknown': continue
@@ -65,6 +67,7 @@ def getWarnings(detecteds, inCam, current):
             warning['type'] = 'in'
             warnings.append(warning)
             inCam.add(name)
+            inCamTime[name] = current
 
     all = detecteds[0] | detecteds[1]# | detecteds[2] | detecteds[3]
     toDelete = []
@@ -80,17 +83,16 @@ def getWarnings(detecteds, inCam, current):
         inCam.remove(name)
 
     if len(warnings) > 0:
-        return os.urandom(4), warnings
-    return None, None
+        return os.urandom(4), warnings, toDelete
+    return None, None, None
 
 async def analyze_cam(db, known_face_encodings, known_face_names):
     store = redis.StrictRedis(host=redishost, port=6379, db=0)
     prev_image_id = None
-    # face_cascade = cv2.CascadeClassifier('face.xml')
     analyze_this_frame = True
     detected_history = [set(), set(), set()]
     inCam = set()
-    # last_detected = set()
+    inCamTime = {}
     while True:
         while True:
             time.sleep(1./MAX_FPS)
@@ -110,6 +112,7 @@ async def analyze_cam(db, known_face_encodings, known_face_names):
 
             # small_frame = cv2.resize(frame, (0, 0), fx=0.25, fy=0.25)
             # Convert the image from BGR color (which OpenCV uses) to RGB color (which face_recognition uses)
+            # small_frame = cv2.resize(frame, (0, 0), fx=0.75, fy=0.75)
             rgb_small_frame = frame[:, :, ::-1]
             face_locations = face_recognition.face_locations(rgb_small_frame)
             face_encodings = face_recognition.face_encodings(rgb_small_frame, face_locations)
@@ -129,12 +132,43 @@ async def analyze_cam(db, known_face_encodings, known_face_names):
                 faces.append({"name":name, "location":face_location})
             
             detected_history.insert(0, detected)
-            warning_id , warnings = getWarnings(detected_history, inCam, current)
+            warning_id , warnings, outers = getWarnings(detected_history, inCam, inCamTime, current)
             detected_history.pop()
             if not (warning_id is None):
                 store.set("warning_id", warning_id)
                 store.set("warning", pickle.dumps(warnings))
-                await add_one_warning(db, warnings, image)
+                for name in outers:
+                    await add_one_warning(db, name, inCamTime[name], current, base64.b64encode(frame))
+                    del inCamTime[name]
+                # await add_one_warning(db, warnings, image)
+                # os.system('curl http://tornado_monitor:8000/new_warning')
+                requests.get('http://tornado_monitor:8000/new_warning')
+            # GetIn = detected - last_detected
+            # GetOut = last_detected - detected
+            # if len(GetIn | GetOut) > 0:
+                
+            #     warnings = []
+            #     for GetInName in GetIn:
+            #         if (GetInName == 'Unknown'):
+            #             continue
+            #         warning = {}
+            #         warning['name'] = GetInName
+            #         warning['time'] = current
+            #         warning['type'] = 'in'
+            #         warnings.append(warning)
+            #     for GetOutName in GetOut:
+            #         if (GetOutName == 'Unknown'):
+            #             continue
+            #         warning = {}
+            #         warning['name'] = GetOutName
+            #         warning['time'] = current
+            #         warning['type'] = 'out'
+            #         warnings.append(warning)
+            #     # print(warnings)
+            #     if (len(warnings) > 0):
+            #         warning_id = os.urandom(4)
+            #         store.set("warning_id", warning_id)
+            #         store.set("warning", pickle.dumps(warnings))
 
             store.set("faces",pickle.dumps(faces))
             last_detected = detected

@@ -24,6 +24,52 @@ from .host import *
 
 MAX_FPS = 100
 
+class WSConnectionManager():
+    websockets = []
+    counter = 0
+
+    @classmethod
+    def AddWSConnection(cls, socket):
+        cls.websockets.append({'id':cls.counter, 'socket':socket})
+        print('A new connection added to pool!')
+        print('Now we have ' + str(len(cls.websockets)) + ' connections!')
+        cls.counter += 1
+        return cls.counter - 1
+
+    @classmethod
+    def DelWSConnection(cls, id):
+        index = -1
+        for _index, ws in enumerate(cls.websockets):
+            if ws['id']==id:
+                index = _index
+                break
+        if index != -1:
+            cls.websockets.pop(index)
+            print('A connection poped out of pool!')
+            print('Now we have ' + str(len(cls.websockets)) + ' connections!')
+
+class NewWarningHandler(tornado.web.RequestHandler):
+    def get(self):
+        for ws in WSConnectionManager.websockets:
+            socket = ws['socket']
+            try:
+                warning_list = pickle.loads(socket.store.get('warning'))
+            except:
+                print("Socket disconnected!")
+                return
+            mess = {}
+            strmess = []
+            for w in warning_list:
+                strmess.append('{} {} at {}'.format(w['name'],w['type'],w['time']))
+            mess['str'] = strmess
+            try:
+                socket.write_message(mess)
+            except tornado.websocket.WebSocketClosedError:
+                print("Websocket disconnected!")
+            except:
+                print("other errors!")
+
+
 def poll_warning_info(last_warning_id, store):
     re_id = None
     while True:
@@ -41,14 +87,16 @@ class WarningSocketHandler(tornado.websocket.WebSocketHandler):
         super(WarningSocketHandler, self).__init__(*args, **kwargs)
         self.last_warning_id = None
         self.store = redis.StrictRedis(host=redishost, port=6379, db=0)
+        self.mid = WSConnectionManager.AddWSConnection(self)
 
     def on_close(self):
         # self.executor.shutdown(wait=True)
+        WSConnectionManager.DelWSConnection(self.mid)
         print("Connection closed by client.")
 
     @run_on_executor
     def on_message(self, message):
-        # print("on_message")
+        print("on_message")
         try:
             (self.last_warning_id, warning) = poll_warning_info(self.last_warning_id, self.store)
             # print(self.last_have_face)
@@ -59,7 +107,7 @@ class WarningSocketHandler(tornado.websocket.WebSocketHandler):
             mess = {}
             strmess = []
             for w in warning:
-                strmess.append('{} {} at {}'.format(w['name'],w['type'],w['time']))
+                strmess.append('From on message: {} {} at {}'.format(w['name'],w['type'],w['time']))
             mess['str'] = strmess
             self.write_message(mess)
         except tornado.websocket.WebSocketClosedError:

@@ -31,6 +31,7 @@ from utils.videostreamer import *
 from utils.warningpusher import *
 from utils.db_utils import *
 from utils.host import *
+from utils.historywarning import *
 
 with open('secret.json','r') as f:
     db_data = json.load(f)
@@ -62,7 +63,8 @@ class Application(tornado.web.Application):
             (r"/video_feed", StreamHandler),
             (r"/video_websocket", VideoSocketHandler), # Really slow! Do not use!
             (r"/warning_websocket", WarningSocketHandler),
-            # (r"/historywarnings", )
+            (r"/historywarning", HistoryWarningHandler),
+            (r"/new_warning", NewWarningHandler),
         ]
         settings = dict(
             web_title=u"Intelligent Monitor System",

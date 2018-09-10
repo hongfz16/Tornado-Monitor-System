@@ -14,7 +14,7 @@ def open_cap():
     max_sleep = 5.0
     cur_sleep = 0.1
     while True:
-        # cap = cv2.VideoCapture('./trimed.mp4')
+        # cap = cv2.VideoCapture('./trump.mp4')
         cap = cv2.VideoCapture(0)
         if cap.isOpened():
             break
@@ -32,7 +32,7 @@ def start_recording():
     width = None if len(sys.argv) <= 1 else int(sys.argv[1])
     height = None if len(sys.argv) <= 2 else int(sys.argv[2])
 
-    width = 640
+    width = 480
     height = 360
 
     # Create video capture object, retrying until successful.

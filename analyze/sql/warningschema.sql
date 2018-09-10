@@ -1,5 +1,7 @@
 CREATE TABLE warnings (
     id SERIAL PRIMARY KEY,
-    warning VARCHAR NOT NULL UNIQUE,
+    name VARCHAR NOT NULL,
+    intime VARCHAR NOT NULL,
+    outtime VARCHAR NOT NULL,
     image VARCHAR NOT NULL
 );
