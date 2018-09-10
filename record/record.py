@@ -68,7 +68,7 @@ def start_recording():
         if image is None:
             time.sleep(0.5)
             continue
-        image = cv2.resize(image, (width, height), interpolation=cv2.INTER_CUBIC)
+        # image = cv2.resize(image, (width, height), interpolation=cv2.INTER_CUBIC)
 
         _, image = cv2.imencode('.jpg', image)
         value = image.tobytes()
