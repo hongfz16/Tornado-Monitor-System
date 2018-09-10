@@ -45,27 +45,20 @@ class HistoryWarningHandler(BaseHandler):
             return
         page = int(pagestr)
         if page < 1:
-            self.set_status(404)
-            return
+            page = 1
         context = []
         res = await self.queryone("SELECT count(*) FROM warnings;")
         if  (page-1) * perpage >= res['count']:
-            self.set_status(404)
-            return
+            page = 1
         for i in range(perpage):
-            # print(res)
-            # print(type(res))
-            # print(res['count'])
             if (page-1)*perpage+1+i > res['count']:
                 break
             ans = {}
             result = await self.queryone("SELECT * FROM warnings WHERE id = %s;", (page-1)*perpage+1+i)
-
             ans['name'] = result['name']
             ans['intime'] = result['intime']
             ans['outtime'] = result['outtime']
             ans['image'] = result['image'].tobytes()
-            # ans['currentpage'] = page
 
             context.append(ans)
 

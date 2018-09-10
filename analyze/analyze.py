@@ -135,9 +135,8 @@ async def analyze_cam(db, known_face_encodings, known_face_names):
                 elif name != 'Unknown':
                     detected.add(name)
                 (top, right, bottom, left) = face_location
-                # print(face_location)
-                # print((top, right, bottom, left))
                 cropedface = frame[top:bottom, left:right]
+                cropedface = cv2.resize(cropedface, (100, 100), interpolation=cv2.INTER_CUBIC) 
                 cropedfaces[name] = cropedface
                 faces.append({"name":name, "location":face_location})
             
