@@ -53,24 +53,32 @@ def isOut(name, detected, detected_history):
                 return False
     return True
 
-def getWarnings(detected, detected_history, current):
+def getWarnings(detecteds, inCam, current):
     warnings = []
-    for name in detected:
-        if name == "Unknown": continue
-        if isIn(name, detected_history):
+    for name in detecteds[0]:
+        if name == 'Unknown': continue
+        if name in detecteds[1] and \
+            not (name in detecteds[-1]) and \
+            not (name in detecteds[-2]):
             warning = {}
             warning['name'] = name
             warning['time'] = current
             warning['type'] = 'in'
             warnings.append(warning)
-    for name in detected_history[-1]:
-        if name == "Unknown": continue
-        if isOut(name, detected, detected_history):
+            inCam.add(name)
+
+    all = detecteds[0] | detecteds[1]# | detecteds[2] | detecteds[3]
+    toDelete = []
+    for name in inCam:
+        if not (name in all):
             warning = {}
             warning['name'] = name
             warning['time'] = current
             warning['type'] = 'out'
             warnings.append(warning)
+            toDelete.append(name)
+    for name in toDelete:
+        inCam.remove(name)
 
     if len(warnings) > 0:
         return os.urandom(4), warnings
@@ -81,7 +89,8 @@ async def analyze_cam(db, known_face_encodings, known_face_names):
     prev_image_id = None
     # face_cascade = cv2.CascadeClassifier('face.xml')
     analyze_this_frame = True
-    detected_history = [set(), set()]
+    detected_history = [set(), set(), set()]
+    inCam = set()
     # last_detected = set()
     while True:
         while True:
@@ -117,13 +126,13 @@ async def analyze_cam(db, known_face_encodings, known_face_names):
                     name = known_face_names[first_match_index]
                 if name in detected:
                     name = "Unknown"
-                else:
+                elif name != 'Unknown':
                     detected.add(name)
-                faces.append({"name":name, "location":face_location})#[lo for lo in face_location]})
-
-            warning_id , warnings = getWarnings(detected, detected_history, current)
-            detected_history.pop()
+                faces.append({"name":name, "location":face_location})
+            
             detected_history.insert(0, detected)
+            warning_id , warnings = getWarnings(detected_history, inCam, current)
+            detected_history.pop()
             if not (warning_id is None):
                 store.set("warning_id", warning_id)
                 store.set("warning", pickle.dumps(warnings))
