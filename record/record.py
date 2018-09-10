@@ -32,8 +32,8 @@ def start_recording():
     width = None if len(sys.argv) <= 1 else int(sys.argv[1])
     height = None if len(sys.argv) <= 2 else int(sys.argv[2])
 
-    width = 480
-    height = 360
+    # width = 480
+    # height = 360
 
     # Create video capture object, retrying until successful.
     cap = open_cap()
