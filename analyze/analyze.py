@@ -15,12 +15,55 @@ def decode_image(imbytes):
     jpeg = cv2.imdecode(jpeg,cv2.IMREAD_COLOR)
     return jpeg
 
+def isIn(name, detected_history):
+    for i in range(len(detected_history)):
+        if i == len(detected_history)-1:
+            if name in detected_history[i]:
+                return False
+        else:
+            if not(name in detected_history[i]):
+                return False
+    return True
+
+def isOut(name, detected, detected_history):
+    if name in detected:
+        return False
+    for i in range(len(detected_history)):
+        if i < len(detected_history)-1:
+            if name in detected_history[i]:
+                return False
+    return True
+
+def getWarnings(detected, detected_history, current):
+    warnings = []
+    for name in detected:
+        if name == "Unknown": continue
+        if isIn(name, detected_history):
+            warning = {}
+            warning['name'] = name
+            warning['time'] = current
+            warning['type'] = 'in'
+            warnings.append(warning)
+    for name in detected_history[-1]:
+        if name == "Unknown": continue
+        if isOut(name, detected, detected_history):
+            warning = {}
+            warning['name'] = name
+            warning['time'] = current
+            warning['type'] = 'out'
+            warnings.append(warning)
+
+    if len(warnings) > 0:
+        return os.urandom(4), warnings
+    return None, None
+
 def analyze_cam():
     store = redis.StrictRedis(host=redishost, port=6379, db=0)
     prev_image_id = None
     # face_cascade = cv2.CascadeClassifier('face.xml')
     analyze_this_frame = True
-    last_detected = set()
+    detected_history = [set(), set()]
+    # last_detected = set()
     while True:
         while True:
             time.sleep(1./MAX_FPS)
@@ -58,34 +101,42 @@ def analyze_cam():
                     detected.add(name)
                 faces.append({"name":name, "location":face_location})
 
-            GetIn = detected - last_detected
-            GetOut = last_detected - detected
-            if len(GetIn | GetOut) > 0:
-                warning_id = os.urandom(4)
-                warnings = []
-                for GetInName in GetIn:
-                    if (GetInName == 'Unknown'):
-                        continue
-                    warning = {}
-                    warning['name'] = GetInName
-                    warning['time'] = current
-                    warning['type'] = 'in'
-                    warnings.append(warning)
-                for GetOutName in GetOut:
-                    if (GetOutName == 'Unknown'):
-                        continue
-                    warning = {}
-                    warning['name'] = GetOutName
-                    warning['time'] = current
-                    warning['type'] = 'out'
-                    warnings.append(warning)
-                # print(warnings)
+            warning_id , warnings = getWarnings(detected, detected_history, current)
+            detected_history.pop()
+            detected_history.insert(0, detected)
+            if not (warning_id is None):
                 store.set("warning_id", warning_id)
                 store.set("warning", pickle.dumps(warnings))
+            # GetIn = detected - last_detected
+            # GetOut = last_detected - detected
+            # if len(GetIn | GetOut) > 0:
+                
+            #     warnings = []
+            #     for GetInName in GetIn:
+            #         if (GetInName == 'Unknown'):
+            #             continue
+            #         warning = {}
+            #         warning['name'] = GetInName
+            #         warning['time'] = current
+            #         warning['type'] = 'in'
+            #         warnings.append(warning)
+            #     for GetOutName in GetOut:
+            #         if (GetOutName == 'Unknown'):
+            #             continue
+            #         warning = {}
+            #         warning['name'] = GetOutName
+            #         warning['time'] = current
+            #         warning['type'] = 'out'
+            #         warnings.append(warning)
+            #     # print(warnings)
+            #     if (len(warnings) > 0):
+            #         warning_id = os.urandom(4)
+            #         store.set("warning_id", warning_id)
+            #         store.set("warning", pickle.dumps(warnings))
 
             store.set("faces",pickle.dumps(faces))
             last_detected = detected
-        analyze_this_frame = not analyze_this_frame
+        # analyze_this_frame = not analyze_this_frame
 
 
 if __name__ == "__main__":
