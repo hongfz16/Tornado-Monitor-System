@@ -62,6 +62,7 @@ class Application(tornado.web.Application):
             (r"/video_feed", StreamHandler),
             (r"/video_websocket", VideoSocketHandler), # Really slow! Do not use!
             (r"/warning_websocket", WarningSocketHandler),
+            # (r"/historywarnings", )
         ]
         settings = dict(
             web_title=u"Intelligent Monitor System",
