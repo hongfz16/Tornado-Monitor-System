@@ -1,5 +1,17 @@
 {% extends "base.html" %}
 
+{% block head %}
+<style>
+.table tbody tr td{
+    vertical-align: middle;
+    text-align: left;
+}
+.th {
+    text-align: center;
+}
+</style>
+{% end %}
+
 {% block body%}
 
 <div class="row">
@@ -50,13 +62,13 @@
                     {% if currentpage>1 %}
                         <li><a href="/historywarnings?page={{currentpage-1}}">Prev</a></li>
                     {% else %}
-                        <li><a href="/#">Prev</a></li>
+                        <li><a href="#" disabled='true'>Prev</a></li>
                     {% end %}
                     <span class="text-center">Page {{currentpage}}</span>
                     {% if nextpage %}
                         <li><a href="/historywarnings?page={{currentpage+1}}">Next</a></li>
                     {% else %}
-                        <li><a href="/#">Next</a></li>
+                        <li><a href="#" disabled='true'>Next</a></li>
                     {% end %}
                 </ul>
 			</div>
