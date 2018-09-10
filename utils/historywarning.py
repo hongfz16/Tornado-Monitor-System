@@ -61,10 +61,14 @@ class HistoryWarningHandler(BaseHandler):
             ans['name'] = result['name']
             ans['intime'] = result['intime']
             ans['outtime'] = result['outtime']
-            ans['image'] = result['image']
+            ans['image'] = str(result['image'])
+            print(type(result['image']))
+            print(result['image'])
+            # image = result['image']
+            # image
             # ans['currentpage'] = page
 
             context.append(ans)
 
-        print(context)
+        # print(context)
         self.render("historywarnings.html", context=context, currentpage=page , nextpage=(page*perpage<res.count))
