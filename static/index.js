@@ -12,9 +12,9 @@ $(document).ready(function(){
 			for(var i=0; i<data.length; ++i) {
 				warningdiv = $("#wswarning")
 				warningdiv.prepend("<p class=\"list-group-item\">"+data[i]+"</p>");
-				if(warningdiv.children().length === 13) {
-					// last_children = warningdiv[warningdiv.length-1]
-					// last_children.remove()
+				videoheight = $("#video_panel").height()
+				warningheight = $("#warning_panel").height()
+				if(videoheight<warningheight) {
 					warningdiv.children().last().remove()
 				}
 			}
