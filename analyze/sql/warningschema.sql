@@ -1,0 +1,5 @@
+CREATE TABLE warnings (
+    id SERIAL PRIMARY KEY,
+    warning VARCHAR NOT NULL UNIQUE,
+    image VARCHAR NOT NULL
+);
