@@ -56,6 +56,7 @@ def isOut(name, detected, detected_history):
 
 def getWarnings(detecteds, inCam, inCamTime, current):
     warnings = []
+    toAdd = []
     for name in detecteds[0]:
         if name == 'Unknown': continue
         if name in detecteds[1] and \
@@ -66,6 +67,7 @@ def getWarnings(detecteds, inCam, inCamTime, current):
             warning['time'] = current
             warning['type'] = 'in'
             warnings.append(warning)
+            toAdd.append(name)
             inCam.add(name)
             inCamTime[name] = current
 
@@ -83,8 +85,8 @@ def getWarnings(detecteds, inCam, inCamTime, current):
         inCam.remove(name)
 
     if len(warnings) > 0:
-        return os.urandom(4), warnings, toDelete
-    return None, None, None
+        return os.urandom(4), warnings, toAdd, toDelete
+    return None, None, None, None
 
 async def analyze_cam(db, known_face_encodings, known_face_names):
     store = redis.StrictRedis(host=redishost, port=6379, db=0)
@@ -93,6 +95,7 @@ async def analyze_cam(db, known_face_encodings, known_face_names):
     detected_history = [set(), set(), set()]
     inCam = set()
     inCamTime = {}
+    inCamFace = {}
     while True:
         while True:
             time.sleep(1./MAX_FPS)
@@ -116,10 +119,12 @@ async def analyze_cam(db, known_face_encodings, known_face_names):
             rgb_small_frame = frame[:, :, ::-1]
             face_locations = face_recognition.face_locations(rgb_small_frame)
             face_encodings = face_recognition.face_encodings(rgb_small_frame, face_locations)
-            faces= []
+            faces = []
+            cropedfaces = {}
             for face_location, face_encoding in zip(face_locations, face_encodings):
                 # See if the face is a match for the known face(s)
                 matches = face_recognition.compare_faces(known_face_encodings, face_encoding)
+                
                 name = "Unknown"
                 # If a match was found in known_face_encodings, just use the first one.
                 if True in matches:
@@ -129,17 +134,26 @@ async def analyze_cam(db, known_face_encodings, known_face_names):
                     name = "Unknown"
                 elif name != 'Unknown':
                     detected.add(name)
+                (top, right, bottom, left) = face_location
+                # print(face_location)
+                # print((top, right, bottom, left))
+                cropedface = frame[top:bottom, left:right]
+                cropedfaces[name] = cropedface
                 faces.append({"name":name, "location":face_location})
             
             detected_history.insert(0, detected)
-            warning_id , warnings, outers = getWarnings(detected_history, inCam, inCamTime, current)
+            warning_id , warnings, iners, outers = getWarnings(detected_history, inCam, inCamTime, current)
             detected_history.pop()
             if not (warning_id is None):
                 store.set("warning_id", warning_id)
                 store.set("warning", pickle.dumps(warnings))
+                for name in iners:
+                    inCamFace[name] = cropedfaces[name]
                 for name in outers:
-                    await add_one_warning(db, name, inCamTime[name], current, base64.b64encode(frame))
+                    # print(base64.b64encode(frame))
+                    await add_one_warning(db, name, inCamTime[name], current, base64.b64encode(cv2.imencode('.jpg', inCamFace[name])[1]))
                     del inCamTime[name]
+                    del inCamFace[name]
                 # await add_one_warning(db, warnings, image)
                 # os.system('curl http://tornado_monitor:8000/new_warning')
                 requests.get('http://tornado_monitor:8000/new_warning')

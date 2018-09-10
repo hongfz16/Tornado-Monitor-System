@@ -61,9 +61,10 @@ class HistoryWarningHandler(BaseHandler):
             ans['name'] = result['name']
             ans['intime'] = result['intime']
             ans['outtime'] = result['outtime']
-            ans['image'] = str(result['image'])
-            print(type(result['image']))
-            print(result['image'])
+            ans['image'] = result['image'].tobytes()
+            # print(result['image'].tobytes())
+            # print(type(result['image'].tobytes()))
+            # print(result['image'])
             # image = result['image']
             # image
             # ans['currentpage'] = page

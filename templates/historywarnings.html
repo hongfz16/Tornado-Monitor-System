@@ -19,10 +19,10 @@
 				    <tbody>
                         {% for entry in context%}
                             <tr>
-                                <td>{{entry.name}}</td>
-                                <td><img src="data:images/gif;base64,{{entry.image}}" type="image/jpeg" class="img-responsive img-rounded" /></td>
-                                <td>{{entry.intime}}</td>
-                                <td>{{entry.outtime}}</td>
+                                <td>{{entry['name']}}</td>
+                                <td><img src="data:image/jpg;base64,{{entry['image']}}" class="img-responsive img-rounded" /></td>
+                                <td>{{entry['intime']}}</td>
+                                <td>{{entry['outtime']}}</td>
                             </tr>
                         {% end %}
 				    </tbody>
@@ -52,6 +52,7 @@
                     {% else %}
                         <li><a href="/#">Prev</a></li>
                     {% end %}
+                    <span class="text-center">Page {{currentpage}}</span>
                     {% if nextpage %}
                         <li><a href="/historywarnings?page={{currentpage+1}}">Next</a></li>
                     {% else %}
