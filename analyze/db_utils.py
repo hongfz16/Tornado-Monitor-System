@@ -30,7 +30,7 @@ async def add_one_warning(db, warning, image):
         #         None, bcrypt.hashpw, tornado.escape.utf8("superuser"),
         #         bcrypt.gensalt())
         # user_hashed_password = tornado.escape.to_unicode(user_hashed_password)
-        print("before INSERT into warnings")
+        # print("before INSERT into warnings")
         await cur.execute("INSERT INTO warnings (warning, image) VALUES (%s, %s)",
                                         (pickle.dumps(warning), image))
-        print("after INSERT into warnings")
+        # print("after INSERT into warnings")
