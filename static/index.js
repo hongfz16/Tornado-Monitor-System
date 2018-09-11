@@ -7,13 +7,14 @@ $(document).ready(function(){
             // console.log("First sending request!")
 		};
 		ws_warning.onmessage = function(msg) {
-			data = $.parseJSON(msg.data)
-			data = data["str"]
+			all_data = $.parseJSON(msg.data)
+			data = all_data["str"]
+			url = all_data["url"]
 			for(var i=0; i<data.length; ++i) {
-				warningdiv = $("#wswarning")
+				warningdiv = $("#wswarning_"+url)
 				warningdiv.prepend("<p class=\"list-group-item\">"+data[i]+"</p>");
-				videoheight = $("#video_panel").height()
-				warningheight = $("#warning_panel").height()
+				videoheight = $("#video_panel_"+url).height()
+				warningheight = $("#warning_panel_"+url).height()
 				if(videoheight<warningheight) {
 					warningdiv.children().last().remove()
 				}

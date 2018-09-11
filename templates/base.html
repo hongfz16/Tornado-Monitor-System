@@ -70,6 +70,14 @@
                         <li>
                             <a href="/"><i class="fas fa-video fa-fw"></i> Web Camera</a>
                         </li>
+                        {% if current_user.level == 0 %}
+                        <li>
+                            <a href="/add_video_feed"><i class="fas fa-plus-circle fa-fw"></i> Add Video Feed</a>
+                        </li>
+                        <li>
+                            <a href="/delete_video_feed"><i class="fas fa-minus-circle fa-fw"></i> Delete Video Feed</a>
+                        </li>
+                        {% end %}
                         <li>
                             <a href="/historywarnings?page=1"><i class="fa fa-history fa-fw"></i> History Warnings</a>
                         </li>

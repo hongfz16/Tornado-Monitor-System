@@ -23,48 +23,37 @@ from .host import *
 MAX_FPS = 100
 
 class UsbCamera(object):
-    def __init__(self):
+    def __init__(self, url):
         self._store = redis.StrictRedis(host=redishost, port=6379, db=0)
         self._prev_image_id = None
-        self._face_cascade = cv2.CascadeClassifier('face.xml')
-    def get_frame(self):
+        self._url = url
+    def get_frame(self, need_draw):
         while True:
             time.sleep(1./MAX_FPS)
-            image_id = self._store.get('image_id')
+            image_id = self._store.get('image_id_'+self._url)
             if image_id != self._prev_image_id:
                 break
         self._prev_image_id = image_id
-        image = self._store.get('image')
-
+        image = self._store.get('image_'+self._url)
         frame = self.decode_image(image)
-
-        facesp = self._store.get("faces")
-        faces = pickle.loads(facesp)
-        for face in faces:
-            # name = face['name']
-            (top, right, bottom, left) = face['location']
-            name = face['name']
-            # for (top, right, bottom, left), name in zip(face['location'], face['name']):
-            cv2.rectangle(frame, (left, top), (right, bottom), (0, 0, 255), 2)
-            cv2.rectangle(frame, (left, bottom), (right, bottom+15), (0, 0, 255), cv2.FILLED)
-            font = cv2.FONT_HERSHEY_DUPLEX
-            cv2.putText(frame, name, (left + 6, bottom + 10), font, 0.5, (255, 255, 255), 1)
-
-        # gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-        # faces = self._face_cascade.detectMultiScale(gray, 1.3, 5)
-
-        # for (x,y,w,h) in faces:
-        #     cv2.rectangle(frame, (x,y), (x+w, y+h), (255,0,0), 2)
+        if need_draw:
+            facesp = self._store.get("faces_"+self._url)
+            faces = pickle.loads(facesp)
+            for face in faces:
+                # name = face['name']
+                (top, right, bottom, left) = face['location']
+                name = face['name']
+                # for (top, right, bottom, left), name in zip(face['location'], face['name']):
+                cv2.rectangle(frame, (left, top), (right, bottom), (0, 0, 255), 2)
+                cv2.rectangle(frame, (left, bottom), (right, bottom+15), (0, 0, 255), cv2.FILLED)
+                font = cv2.FONT_HERSHEY_DUPLEX
+                cv2.putText(frame, name, (left + 6, bottom + 10), font, 0.5, (255, 255, 255), 1)
         image = cv2.imencode('.jpg',frame)[1].tobytes()
-        
         return image
     def decode_image(self, imbytes):
         jpeg = np.asarray(bytearray(imbytes), dtype="uint8")
         jpeg = cv2.imdecode(jpeg,cv2.IMREAD_COLOR)
         return jpeg
-    def have_face(self):
-        num = self._store.get('num_face')
-        return int(num)
 
 # Really slow! Do not use it!
 class VideoSocketHandler(tornado.websocket.WebSocketHandler):
@@ -78,7 +67,9 @@ class VideoSocketHandler(tornado.websocket.WebSocketHandler):
 class StreamHandler(tornado.web.RequestHandler):
     def __init__(self, *args, **kwargs):
         super(StreamHandler, self).__init__(*args, **kwargs)
-        self.cam = UsbCamera()
+        url = self.get_argument('video', None)
+        self.cam = UsbCamera(url)
+
     @tornado.gen.coroutine
     def get(self):
         ioloop = tornado.ioloop.IOLoop.current()
