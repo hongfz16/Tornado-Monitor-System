@@ -25,6 +25,7 @@ from threading import Thread
 from concurrent.futures import ThreadPoolExecutor
 from .host import *
 from .mauth import BaseHandler
+from utils.noresulterror import NoResultError
 
 perpage = 5
 
@@ -49,24 +50,31 @@ class HistoryWarningHandler(BaseHandler):
             if page < 1:
                 page = 1
             context = []
-            res = await self.queryone("SELECT count(*) FROM warnings;")
-            if  (page-1) * perpage >= res['count']:
+            # res = await self.queryone("SELECT count(*) FROM warnings;")
+            try:
+                res = await self.query("SELECT * FROM warnings ORDER BY id DESC;")
+            except NoResultError:
+                res = []
+            print(res)
+            count = len(res)
+            if  (page-1) * perpage >= count:
                 page = 1
             for i in range(perpage):
-                if (page-1)*perpage+1+i > res['count']:
-                    break
+                index = (page-1)*perpage+1+i
+                if index > count: break
+                index -= 1
                 ans = {}
-                result = await self.queryone("SELECT * FROM warnings WHERE id = %s;", (page-1)*perpage+1+i)
-                ans['id'] = result['id']
-                ans['name'] = result['name']
-                ans['intime'] = result['intime']
-                ans['outtime'] = result['outtime']
-                ans['image'] = result['image'].tobytes()
+                # result = await self.queryone("SELECT * FROM warnings WHERE id = %s;", (page-1)*perpage+1+i)
+                ans['id'] = res[index]['id']
+                ans['name'] = res[index]['name']
+                ans['intime'] = res[index]['intime']
+                ans['outtime'] = res[index]['outtime']
+                ans['image'] = res[index]['image'].tobytes()
 
                 context.append(ans)
 
             # print(context)
-            self.render("historywarnings.html", context=context, currentpage=page , nextpage=(page*perpage<res.count))
+            self.render("historywarnings.html", context=context, currentpage=page , nextpage=(page*perpage<count))
         else:
             if not deleteid.isdigit():
                 self.set_status(404)
@@ -74,5 +82,5 @@ class HistoryWarningHandler(BaseHandler):
             print(type(deleteid))
             print(deleteid)
             id = int(deleteid)
-            res = await self.queryone("DELETE FROM warnings WHERE id = %s;", id)
+            await self.execute("DELETE FROM warnings WHERE id = %s;", id)
             self.redirect("/historywarnings?page=1")
