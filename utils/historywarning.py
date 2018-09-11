@@ -32,30 +32,21 @@ perpage = 5
 class HistoryWarningHandler(BaseHandler):
     @tornado.web.authenticated
     async def get(self):
-        print("in HistoryWarningHandler")
         deleteid = self.get_argument('delete', None)
         if deleteid is None:
             pagestr = self.get_argument('page', 'bad')
-            print(pagestr)
             if not pagestr.isdigit():
                 self.set_status(404)
                 return
-            print(pagestr)
             page = int(pagestr)
             if page < 1:
                 page = 1
             context = []
-            # res = await self.queryone("SELECT count(*) FROM warnings;")
-            print(pagestr)
             try:
-                res = await self.query("SELECT * FROM warnings;")
-                print(pagestr)
+                res = await self.query("SELECT * FROM warnings ORDER BY DESC;")
             except NoResultError:
                 res = []
-                print(pagestr)
             count = len(res)
-            print(res)
-            print(count)
             if  (page-1) * perpage >= count:
                 page = 1
             for i in range(perpage):

@@ -17,8 +17,6 @@ import tornado.options
 import tornado.web
 import tornado.websocket
 from tornado.options import define, options
-import psycopg2
-from db_utils import *
 import threading
 
 # postgreshost = '127.0.0.1'
@@ -27,19 +25,10 @@ postgreshost  = 'postgres'
 redishost = 'redis'
 
 urls = set()
-
+urls_lock = threading.Lock()
 MAX_FPS = 100
 
-with open('secret.json','r') as f:
-    db_data = json.load(f)
-    define("db_host", default=postgreshost, help="database host")
-    define("db_port", default=5432, help="database port")
-    define("db_database", default=db_data['Database'], help="database name")
-    define("db_user", default=db_data['Username'], help="database user")
-    define("db_password", default=db_data['Password'], help="database password")
-
 define("port", default=6000, help="run on the given port", type=int)
-define("db_delete", default=True, help="Delte all the tables in db")
 
 def decode_image(imbytes):
     jpeg = np.asarray(bytearray(imbytes), dtype="uint8")
@@ -99,7 +88,7 @@ def getWarnings(detecteds, inCam, inCamTime, current):
         return os.urandom(4), warnings, toAdd, toDelete
     return None, None, None, None
 
-def analyze_cam(db, known_face_encodings, known_face_names, url):
+def analyze_cam(known_face_encodings, known_face_names, url):
     store = redis.StrictRedis(host=redishost, port=6379, db=0)
     prev_image_id = None
     analyze_this_frame = True
@@ -160,55 +149,31 @@ def analyze_cam(db, known_face_encodings, known_face_names, url):
                 store.set("warning"+'_'+url, pickle.dumps(warnings))
                 for name in iners:
                     inCamFace[name] = cropedfaces[name]
+                db_warnings = []
                 for name in outers:
                     # print(base64.b64encode(frame))
-                    add_one_warning(db, name, inCamTime[name], current,
-                        base64.b64encode(cv2.imencode('.jpg', inCamFace[name])[1]), url)
+                    db_warning = {}
+                    db_warning['name'] = name
+                    db_warning['intime'] = inCamTime[name]
+                    db_warning['outtime'] = current
+                    db_warning['image'] = base64.b64encode(cv2.imencode('.jpg', inCamFace[name])[1])
+                    db_warning['url'] = url
+                    db_warnings.append(db_warning)
+                    # add_one_warning(db, name, inCamTime[name], current,
+                    #     base64.b64encode(cv2.imencode('.jpg', inCamFace[name])[1]), url)
                     del inCamTime[name]
                     del inCamFace[name]
-                # await add_one_warning(db, warnings, image)
-                # os.system('curl http://tornado_monitor:8000/new_warning')
+                if len(db_warnings) > 0:
+                    store.set("db_warnings"+'_'+url, pickle.dumps(db_warnings))
+                    requests.get('http://tornado_monitor:8000/new_warning_writedb?url=%s'%url)
+
                 requests.get('http://tornado_monitor:8000/new_warning?url=%s'%url)
+                
             
 
             store.set("faces"+'_'+url, pickle.dumps(faces))
             last_detected = detected
         # analyze_this_frame = not analyze_this_frame
-
-
-def connect_to_db(url):
-    tornado.options.parse_command_line()
-
-    # Create the global connection pool.
-    print("Trying to connect to postgres %s..."%url)
-    with psycopg2.connect(
-            host=options.db_host,
-            port=options.db_port,
-            user=options.db_user,
-            password=options.db_password,
-            dbname=options.db_database) as db:
-        print("Successfully connected to postgres!")
-        if options.db_delete:
-            clear_db(db, './sql/delete.sql')
-            maybe_create_tables(db, './sql/warningschema.sql')
-
-        print("Initializing face recognition module...")
-        known_face_encodings = []
-        known_face_names = []
-        path = './known_faces/'
-        dirs = os.listdir(path)
-        for filename in dirs:
-            if filename == '.DS_Store':
-                continue
-            name = filename.split('.')[0]
-            img = face_recognition.load_image_file(path+filename)
-            img_encoding = face_recognition.face_encodings(img)[0]
-            known_face_encodings.append(img_encoding)
-            known_face_names.append(name)
-        print("Finish initializing...")
-        print("Start analyzing %s..."%url)
-        analyze_cam(db, known_face_encodings, known_face_names, url)
-        print("Stop analyzing %s..."%url)
 
 class Application(tornado.web.Application):
     def __init__(self):
@@ -244,14 +209,15 @@ class newCameraHandler(tornado.web.RequestHandler):
         url = self.get_argument('url', None)
         if url is None: return
         urls.add(url)
-        MultiThreadHandler(connect_to_db, (url,))
+        MultiThreadHandler(analyze_cam, (known_face_encodings, known_face_names, url,))
 
 class deleteCameraHandler(tornado.web.RequestHandler):
     def get(self):
         url = self.get_argument('url', None)
         if url is None: return
-        if url in urls:
-            urls.remove(url)
+        with urls_lock:
+            if url in urls:
+                urls.remove(url)
 
 if __name__ == "__main__":
     # tornado.ioloop.IOLoop.current().run_sync(connect_to_db)
@@ -259,6 +225,21 @@ if __name__ == "__main__":
     # t = MultiThreadHandler(connect_to_db, '0')
     # time.sleep(5)
     # urls.remove('0')
+    print("Initializing face recognition module...")
+    known_face_encodings = []
+    known_face_names = []
+    path = './known_faces/'
+    dirs = os.listdir(path)
+    for filename in dirs:
+        if filename == '.DS_Store':
+            continue
+        name = filename.split('.')[0]
+        img = face_recognition.load_image_file(path+filename)
+        img_encoding = face_recognition.face_encodings(img)[0]
+        known_face_encodings.append(img_encoding)
+        known_face_names.append(name)
+    print("Finish initializing...")
+
     app = Application()
     app.listen(options.port)
     tornado.ioloop.IOLoop.current().start()

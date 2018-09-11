@@ -21,6 +21,7 @@ from tornado.concurrent import run_on_executor
 from threading import Thread
 from concurrent.futures import ThreadPoolExecutor
 from .host import *
+from .mauth import BaseHandler
 
 MAX_FPS = 100
 
@@ -51,7 +52,7 @@ class WSConnectionManager():
 class NewWarningHandler(tornado.web.RequestHandler):
     def get(self):
         url = self.get_argument('url', None)
-        print(url)
+        # print(url)
         if not url:
             return
         for ws in WSConnectionManager.websockets:
@@ -73,6 +74,18 @@ class NewWarningHandler(tornado.web.RequestHandler):
                 print("Websocket disconnected!")
             except:
                 print("other errors!")
+
+class NewWarningWritedbHandler(BaseHandler):
+    store = redis.StrictRedis(host=redishost, port=6379, db=0)
+    async def get(self):
+        print('in NewWarningWritedbHandler')
+        url = self.get_argument('url', None)
+        if not url:
+            return
+        db_warnings = pickle.loads(self.store.get('db_warnings_'+url))
+        for db_warning in db_warnings:
+            await self.execute("INSERT INTO warnings (name, intime, outtime, url, image) VALUES (%s, %s, %s, %s, %s)",
+                    db_warning['name'], db_warning['intime'], db_warning['outtime'], db_warning['url'], db_warning['image'])
 
 # Not using it! Polling is inefficient!
 def poll_warning_info(last_warning_id, store):
