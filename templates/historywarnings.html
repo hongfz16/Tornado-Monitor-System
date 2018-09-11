@@ -35,6 +35,11 @@
                                 <td><img src="data:image/jpg;base64,{{entry['image']}}" class="img-responsive img-rounded" /></td>
                                 <td>{{entry['intime']}}</td>
                                 <td>{{entry['outtime']}}</td>
+                                <td>
+                                    <a href="/historywarnings?delete={{entry['id']}}" class="btn btn-info btn-lg">
+                                        <span class="glyphicon glyphicon-trash"></span> Delete 
+                                    </a>
+                                </td>
                             </tr>
                         {% end %}
 				    </tbody>
