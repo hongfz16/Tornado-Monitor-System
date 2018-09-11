@@ -22,7 +22,8 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/metismenu/dist/metisMenu.min.css">
     <link href="{{ static_url("sb-admin-2.css") }}" rel="stylesheet">
     <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/morris.js/0.5.1/morris.css">
-    <link href="https://cdn.bootcss.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" type="text/css">
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.3.1/css/all.css" integrity="sha384-mzrmE5qonljUremFsqc01SB46JvROS7bZs3IO2EmfFsd15uHvIt+Y8vEf7N7fWAU" crossorigin="anonymous">
+    {# <link href="https://cdn.bootcss.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" type="text/css"> #}
     {% block head %}{% end %}
 
     <style>
@@ -41,7 +42,7 @@
                     <span class="icon-bar"></span>
                     <span class="icon-bar"></span>
                 </button>
-                <a class="navbar-brand" href="/">{{ escape(handler.settings["web_title"]) }}</a>
+                <a class="navbar-brand" href="/"><i class="fas fa-glasses"></i> {{ escape(handler.settings["web_title"]) }}</a>
             </div>
             <!-- /.navbar-header -->
             <ul class="nav navbar-right navbar-top-links">
@@ -67,13 +68,13 @@
                 <div class="sidebar-nav navbar-collapse">
                     <ul class="nav" id="side-menu">
                         <li>
-                            <a href="/"><i class="fa fa-dashboard fa-fw"></i> Web Camera</a>
+                            <a href="/"><i class="fas fa-video fa-fw"></i> Web Camera</a>
                         </li>
                         <li>
-                            <a href="/historywarnings?page=1"><i class="fa fa-dashboard fa-fw"></i> History Warnings</a>
+                            <a href="/historywarnings?page=1"><i class="fa fa-history fa-fw"></i> History Warnings</a>
                         </li>
                         <li>
-                            <a href="#"><i class="fa fa-bar-chart-o fa-fw"></i> Account Settings<span class="fa arrow"></span></a>
+                            <a href="#"><i class="fa fa-cog fa-fw"></i> Account Settings<span class="fa arrow"></span></a>
                             <ul class="nav nav-second-level">
                                 <li>
                                     <a href="/auth/changepwd">Change Password</a>
