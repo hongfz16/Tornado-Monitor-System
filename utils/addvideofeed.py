@@ -60,4 +60,4 @@ class DeleteVideoFeedHandler(BaseHandler):
         self.application.urls.remove(new_url)
         requests.get('http://record_thread:7000/delete_camera_feed?url='+new_url)
         requests.get('http://analyze_thread:6000/delete_camera_feed?url='+new_url)
-        self.render('addvideofeed.html', error=None, message='Successfully remove url: '+new_url)
+        self.render('deletevideofeed.html', error=None, message='Successfully remove url: '+new_url)

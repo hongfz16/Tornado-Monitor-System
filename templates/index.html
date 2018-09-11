@@ -17,11 +17,11 @@
         </div>
         <div class="row">
         {% for url in urls%}
-        	<div class="col-lg-3">
+        	<div class="col-lg-4">
         		<div class="panel panel-default" id="video_panel_{{url}}">
         			<div class="panel-heading">Video from {{url}}</div>
         			<div class="panel-body">
-						<a href="/?video={{url}}"><img id="videofield_{{url}}" class="video" src="/video_feed?video={{url}}" height="100%" width="100%"></a>
+						<a href="/detail?video={{url}}"><img id="videofield_{{url}}" class="video" src="/video_feed?video={{url}}" height="100%" width="100%"></a>
 					</div>
 				</div>
         	</div>

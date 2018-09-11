@@ -48,10 +48,14 @@ define("db_createsuperuser", default=True, help="Create Superuser")
 
 class IndexHandler(BaseHandler):
     async def get(self):
-        url = self.get_argument('video')
-        if url:
-            self.render("videodetail.html",url=url)
         self.render("index.html", urls=self.application.urls)
+
+class DetailHandler(BaseHandler):
+    @tornado.web.authenticated
+    def get(self):
+        url = self.get_argument('video')
+        self.render("videodetail.html",url=url)
+
 
 class Application(tornado.web.Application):
     def __init__(self, db):
@@ -59,6 +63,7 @@ class Application(tornado.web.Application):
         self.urls = []
         handlers = [
             (r"/", IndexHandler),
+            (r"/detail", DetailHandler),
             (r"/auth/signup", AuthSignupHandler),
             (r"/auth/login", AuthLoginHandler),
             (r"/auth/logout", AuthLogoutHandler),
@@ -70,7 +75,6 @@ class Application(tornado.web.Application):
             (r"/warning_websocket", WarningSocketHandler),
             (r"/historywarnings", HistoryWarningHandler),
             (r"/new_warning", NewWarningHandler),
-            (r"/new_warning_write_db")
             (r"/add_video_feed", AddVideoFeedHandler),
             (r"/delete_video_feed", DeleteVideoFeedHandler),
             (r"/new_warning_writedb", NewWarningWritedbHandler)
