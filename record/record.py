@@ -24,6 +24,7 @@ define("port", default=7000, help="run on the given port", type=int)
 redishost = 'redis'
 
 urls = set()
+urls_lock = threading.Lock()
 
 def open_cap(url):
     max_sleep = 5.0
@@ -139,8 +140,9 @@ class deleteCameraHandler(tornado.web.RequestHandler):
         url = self.get_argument('url', None)
         print('delete_camera_feed:'+url)
         if url is None: return
-        if url in urls:
-            urls.remove(url)
+        with urls_lock:
+            if url in urls:
+                urls.remove(url)
 
 if __name__ == "__main__":
     # urls.add('trump.mp4')

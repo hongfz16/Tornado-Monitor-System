@@ -36,7 +36,7 @@ class AddVideoFeedHandler(BaseHandler):
     @tornado.web.authenticated
     def post(self):
         new_url = self.get_argument('url')
-        print(new_url)
+        # print(new_url)
         if new_url in self.application.urls:
             self.render('addvideofeed.html', error='This url has been added.', message=None)
             return

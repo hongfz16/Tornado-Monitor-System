@@ -73,6 +73,7 @@ class Application(tornado.web.Application):
             (r"/new_warning_write_db")
             (r"/add_video_feed", AddVideoFeedHandler),
             (r"/delete_video_feed", DeleteVideoFeedHandler),
+            (r"/new_warning_writedb", NewWarningWritedbHandler)
         ]
         settings = dict(
             web_title=u"Intelligent Monitor System",

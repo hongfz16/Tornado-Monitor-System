@@ -39,6 +39,7 @@ class BaseHandler(tornado.web.RequestHandler):
         Or::
             for row in await self.query(...)
         """
+        print('in query')
         with (await self.application.db.cursor()) as cur:
             await cur.execute(stmt, args)
             return [self.row_to_obj(row, cur)
