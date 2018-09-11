@@ -39,28 +39,38 @@ class HistoryWarningHandler(BaseHandler):
         # except:
         #     self.redirect("/")
         #     return
-        pagestr = self.get_argument('page', 'bad')
-        if not pagestr.isdigit():
-            self.set_status(404)
-            return
-        page = int(pagestr)
-        if page < 1:
-            page = 1
-        context = []
-        res = await self.queryone("SELECT count(*) FROM warnings;")
-        if  (page-1) * perpage >= res['count']:
-            page = 1
-        for i in range(perpage):
-            if (page-1)*perpage+1+i > res['count']:
-                break
-            ans = {}
-            result = await self.queryone("SELECT * FROM warnings WHERE id = %s;", (page-1)*perpage+1+i)
-            ans['name'] = result['name']
-            ans['intime'] = result['intime']
-            ans['outtime'] = result['outtime']
-            ans['image'] = result['image'].tobytes()
+        deleteid = self.get_argument('delete', None)
+        if deleteid is None:
+            pagestr = self.get_argument('page', 'bad')
+            if not pagestr.isdigit():
+                self.set_status(404)
+                return
+            page = int(pagestr)
+            if page < 1:
+                page = 1
+            context = []
+            res = await self.queryone("SELECT count(*) FROM warnings;")
+            if  (page-1) * perpage >= res['count']:
+                page = 1
+            for i in range(perpage):
+                if (page-1)*perpage+1+i > res['count']:
+                    break
+                ans = {}
+                result = await self.queryone("SELECT * FROM warnings WHERE id = %s;", (page-1)*perpage+1+i)
+                ans['id'] = result['id']
+                ans['name'] = result['name']
+                ans['intime'] = result['intime']
+                ans['outtime'] = result['outtime']
+                ans['image'] = result['image'].tobytes()
 
-            context.append(ans)
+                context.append(ans)
 
-        # print(context)
-        self.render("historywarnings.html", context=context, currentpage=page , nextpage=(page*perpage<res.count))
+            # print(context)
+            self.render("historywarnings.html", context=context, currentpage=page , nextpage=(page*perpage<res.count))
+        else:
+            if not deleteid.isdigit():
+                self.set_status(404)
+                return
+            id = int(deleteid)
+            await self.queryone("DELETE FROM warnings WHERE id = %s;", id)
+            self.redirect("historywarnings.html", page = '1')
