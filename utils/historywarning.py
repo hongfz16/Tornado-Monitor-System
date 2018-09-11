@@ -52,7 +52,7 @@ class HistoryWarningHandler(BaseHandler):
             context = []
             # res = await self.queryone("SELECT count(*) FROM warnings;")
             try:
-                res = await self.query("SELECT * FROM warnings;")
+                res = await self.query("SELECT * FROM warnings ORDER BY id DESC;")
             except NoResultError:
                 res = []
             print(res)
