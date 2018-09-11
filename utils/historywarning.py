@@ -72,5 +72,5 @@ class HistoryWarningHandler(BaseHandler):
                 self.set_status(404)
                 return
             id = int(deleteid)
-            await self.queryone("DELETE FROM warnings WHERE id = %s;", id)
-            self.redirect("historywarnings.html", page = '1')
+            await self.execute("DELETE FROM warnings WHERE id = %s;", id)
+            self.redirect("/historywarnings?page=1")
