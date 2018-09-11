@@ -55,6 +55,7 @@ class HistoryWarningHandler(BaseHandler):
                 break
             ans = {}
             result = await self.queryone("SELECT * FROM warnings WHERE id = %s;", (page-1)*perpage+1+i)
+            ans['id'] = result['id']
             ans['name'] = result['name']
             ans['intime'] = result['intime']
             ans['outtime'] = result['outtime']
