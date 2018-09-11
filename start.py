@@ -78,14 +78,6 @@ class Application(tornado.web.Application):
         )
         super(Application, self).__init__(handlers, **settings)
 
-class MultiThreadHandler:
-    def __init__(self, func, *args):
-        self.thread = Thread(target = func, args=args)
-        self.thread.start()
-
-    def finish(self):
-        self.thread.join()
-
 async def main():
     tornado.options.parse_command_line()
     

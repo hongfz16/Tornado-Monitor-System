@@ -3,6 +3,8 @@ services:
 
   analyze_thread:
     build: ./analyze
+    expose:
+      - "6000"
     depends_on:
       - record_thread
       - redis
@@ -14,6 +16,8 @@ services:
     build: ./record
     devices:
       - /dev/video0:/dev/video0
+    expose:
+      - "7000"
     depends_on:
       - redis
       - postgres

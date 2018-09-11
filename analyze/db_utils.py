@@ -10,20 +10,20 @@ import tornado.options
 import tornado.web
 import tornado.websocket
 
-async def clear_db(db, filename):
+def clear_db(db, filename):
     with open(filename,'r') as f:
         delsql = f.read()
-    with (await db.cursor()) as cur:
-        await cur.execute(delsql)
+    with db.cursor() as cur:
+        cur.execute(delsql)
 
-async def maybe_create_tables(db, filename):
+def maybe_create_tables(db, filename):
     with open(filename, 'r') as f:
         schema = f.read()
-    with (await db.cursor()) as cur:
-        await cur.execute(schema)
+    with db.cursor() as cur:
+        cur.execute(schema)
 
-async def add_one_warning(db, name, intime, outtime, image):
-    with await(db.cursor()) as cur:
+def add_one_warning(db, name, intime, outtime, image, url):
+    with db.cursor() as cur:
         # user_email = "su@su.com"
         # user_name = "su"
         # user_hashed_password = await tornado.ioloop.IOLoop.current().run_in_executor(
@@ -31,6 +31,6 @@ async def add_one_warning(db, name, intime, outtime, image):
         #         bcrypt.gensalt())
         # user_hashed_password = tornado.escape.to_unicode(user_hashed_password)
         # print("before INSERT into warnings")
-        await cur.execute("INSERT INTO warnings (name, intime, outtime, image) VALUES (%s, %s, %s, %s)",
-                                        (name, intime, outtime, image))
+        cur.execute("INSERT INTO warnings (name, intime, outtime, image, url) VALUES (%s, %s, %s, %s, %s)",
+                                        (name, intime, outtime, image, url))
         # print("after INSERT into warnings")

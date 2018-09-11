@@ -10,12 +10,16 @@ import json
 import requests
 import tornado
 from tornado.options import define, options
+import psycopg2
 from db_utils import *
+import threading
 
 # postgreshost = '127.0.0.1'
 # redishost = '127.0.0.1'
 postgreshost  = 'postgres'
 redishost = 'redis'
+
+urls = set()
 
 MAX_FPS = 100
 
@@ -27,7 +31,7 @@ with open('secret.json','r') as f:
     define("db_user", default=db_data['Username'], help="database user")
     define("db_password", default=db_data['Password'], help="database password")
 
-define("port", default=8000, help="run on the given port", type=int)
+define("port", default=6000, help="run on the given port", type=int)
 define("db_delete", default=True, help="Delte all the tables in db")
 
 def decode_image(imbytes):
@@ -88,7 +92,7 @@ def getWarnings(detecteds, inCam, inCamTime, current):
         return os.urandom(4), warnings, toAdd, toDelete
     return None, None, None, None
 
-async def analyze_cam(db, known_face_encodings, known_face_names):
+def analyze_cam(db, known_face_encodings, known_face_names, url):
     store = redis.StrictRedis(host=redishost, port=6379, db=0)
     prev_image_id = None
     analyze_this_frame = True
@@ -96,16 +100,17 @@ async def analyze_cam(db, known_face_encodings, known_face_names):
     inCam = set()
     inCamTime = {}
     inCamFace = {}
-    while True:
-        while True:
+    while url in urls:
+        while url in urls:
             time.sleep(1./MAX_FPS)
-            image_id = store.get('image_id')
+            image_id = store.get('image_id'+'_'+url)
             if image_id != prev_image_id:
                 break
+        if not (url in urls): break
         if analyze_this_frame:
             current = time.strftime('%Y.%m.%d %H:%M:%S',time.localtime(time.time()+28800))
             prev_image_id = image_id
-            image = store.get('image')
+            image = store.get('image'+'_'+url)
             frame = decode_image(image)
             detected = set()
 
@@ -144,56 +149,32 @@ async def analyze_cam(db, known_face_encodings, known_face_names):
             warning_id , warnings, iners, outers = getWarnings(detected_history, inCam, inCamTime, current)
             detected_history.pop()
             if not (warning_id is None):
-                store.set("warning_id", warning_id)
-                store.set("warning", pickle.dumps(warnings))
+                store.set("warning_id"+'_'+url, warning_id)
+                store.set("warning"+'_'+url, pickle.dumps(warnings))
                 for name in iners:
                     inCamFace[name] = cropedfaces[name]
                 for name in outers:
                     # print(base64.b64encode(frame))
-                    await add_one_warning(db, name, inCamTime[name], current, base64.b64encode(cv2.imencode('.jpg', inCamFace[name])[1]))
+                    add_one_warning(db, name, inCamTime[name], current,
+                        base64.b64encode(cv2.imencode('.jpg', inCamFace[name])[1]), url)
                     del inCamTime[name]
                     del inCamFace[name]
                 # await add_one_warning(db, warnings, image)
                 # os.system('curl http://tornado_monitor:8000/new_warning')
-                requests.get('http://tornado_monitor:8000/new_warning')
-            # GetIn = detected - last_detected
-            # GetOut = last_detected - detected
-            # if len(GetIn | GetOut) > 0:
-                
-            #     warnings = []
-            #     for GetInName in GetIn:
-            #         if (GetInName == 'Unknown'):
-            #             continue
-            #         warning = {}
-            #         warning['name'] = GetInName
-            #         warning['time'] = current
-            #         warning['type'] = 'in'
-            #         warnings.append(warning)
-            #     for GetOutName in GetOut:
-            #         if (GetOutName == 'Unknown'):
-            #             continue
-            #         warning = {}
-            #         warning['name'] = GetOutName
-            #         warning['time'] = current
-            #         warning['type'] = 'out'
-            #         warnings.append(warning)
-            #     # print(warnings)
-            #     if (len(warnings) > 0):
-            #         warning_id = os.urandom(4)
-            #         store.set("warning_id", warning_id)
-            #         store.set("warning", pickle.dumps(warnings))
+                requests.get('http://tornado_monitor:8000/new_warning?url=%s'%url)
+            
 
-            store.set("faces",pickle.dumps(faces))
+            store.set("faces"+'_'+url, pickle.dumps(faces))
             last_detected = detected
         # analyze_this_frame = not analyze_this_frame
 
 
-async def connect_to_db():
+def connect_to_db(url):
     tornado.options.parse_command_line()
 
     # Create the global connection pool.
-    print("Trying to connect to postgres...")
-    async with aiopg.create_pool(
+    print("Trying to connect to postgres %s..."%url)
+    with psycopg2.connect(
             host=options.db_host,
             port=options.db_port,
             user=options.db_user,
@@ -201,8 +182,8 @@ async def connect_to_db():
             dbname=options.db_database) as db:
         print("Successfully connected to postgres!")
         if options.db_delete:
-            await clear_db(db, './sql/delete.sql')
-            await maybe_create_tables(db, './sql/warningschema.sql')
+            clear_db(db, './sql/delete.sql')
+            maybe_create_tables(db, './sql/warningschema.sql')
 
         print("Initializing face recognition module...")
         known_face_encodings = []
@@ -218,18 +199,59 @@ async def connect_to_db():
             known_face_encodings.append(img_encoding)
             known_face_names.append(name)
         print("Finish initializing...")
-        print("Start analyzing...")
-        await analyze_cam(db, known_face_encodings, known_face_names)
-        # if options.db_createsuperuser:
-        #     await create_superuser(db)
-        # app = Application(db)
-        # app.listen(options.port)
+        print("Start analyzing %s..."%url)
+        analyze_cam(db, known_face_encodings, known_face_names, url)
+        print("Stop analyzing %s..."%url)
 
-        # In this demo the server will simply run until interrupted
-        # with Ctrl-C, but if you want to shut down more gracefully,
-        # call shutdown_event.set().
-        # shutdown_event = tornado.locks.Event()
-        # await shutdown_event.wait()
+class Application(tornado.web.Application):
+    def __init__(self):
+        handlers = [
+            (r"/newCameraHandler", newCameraHandler),
+            (r"/deleteCameraHandler", deleteCameraHandler),
+        ]
+        settings = dict(
+            # web_title=u"Intelligent Monitor System",
+            # template_path=os.path.join(os.path.dirname(__file__), "templates"),
+            # static_path=os.path.join(os.path.dirname(__file__), "static"),
+            ui_modules={},
+            # xsrf_cookies=True,
+            # cookie_secret="__TODO:_GENERATE_YOUR_OWN_RANDOM_VALUE_HERE__",
+            # login_url="/auth/login",
+            debug=True,
+        )
+        super(Application, self).__init__(handlers, **settings)
+
+class MultiThreadHandler:
+    def __init__(self, func, args=None):
+        if args is None:
+            self.thread = threading.Thread(target = func)
+        else:
+            self.thread = threading.Thread(target = func, args = args)
+        self.thread.start()
+
+    def finish(self):
+        self.thread.join()
+
+class newCameraHandler(tornado.web.RequestHandler):
+    def get(self):
+        url = self.get_argument('new_camera_feed', None)
+        if url is none: return
+        urls.add(url)
+        MultiThreadHandler(connect_to_db, (url,))
+
+class deleteCameraHandler(tornado.web.RequestHandler):
+    def get(self):
+        url = self.get_argument('delete_camera_feed', None)
+        if url is none: return
+        if url in urls:
+            urls.remove(url)
 
 if __name__ == "__main__":
-    tornado.ioloop.IOLoop.current().run_sync(connect_to_db)
+    # tornado.ioloop.IOLoop.current().run_sync(connect_to_db)
+    # urls.add('0')
+    # t = MultiThreadHandler(connect_to_db, '0')
+    # time.sleep(5)
+    # urls.remove('0')
+    app = Application()
+    app.listen(options.port)
+    tornado.ioloop.IOLoop.current().start()
