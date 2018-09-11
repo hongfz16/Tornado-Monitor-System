@@ -55,7 +55,7 @@ class HistoryWarningHandler(BaseHandler):
                 res = await self.query("SELECT * FROM warnings ORDER BY id DESC;")
             except NoResultError:
                 res = []
-            print(res)
+            # print(res)
             count = len(res)
             if  (page-1) * perpage >= count:
                 page = 1
@@ -79,8 +79,8 @@ class HistoryWarningHandler(BaseHandler):
             if not deleteid.isdigit():
                 self.set_status(404)
                 return
-            print(type(deleteid))
-            print(deleteid)
+            # print(type(deleteid))
+            # print(deleteid)
             id = int(deleteid)
             await self.execute("DELETE FROM warnings WHERE id = %s;", id)
             self.redirect("/historywarnings?page=1")
