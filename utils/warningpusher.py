@@ -50,10 +50,14 @@ class WSConnectionManager():
 
 class NewWarningHandler(tornado.web.RequestHandler):
     def get(self):
+        url = self.get_argument('url', None)
+        print(url)
+        if not url:
+            return
         for ws in WSConnectionManager.websockets:
             socket = ws['socket']
             try:
-                warning_list = pickle.loads(socket.store.get('warning'))
+                warning_list = pickle.loads(socket.store.get('warning_'+url))
             except:
                 print("Socket disconnected!")
                 return
@@ -62,6 +66,7 @@ class NewWarningHandler(tornado.web.RequestHandler):
             for w in warning_list:
                 strmess.append('{} {} at {}'.format(w['name'],w['type'],w['time']))
             mess['str'] = strmess
+            mess['url'] = url
             try:
                 socket.write_message(mess)
             except tornado.websocket.WebSocketClosedError:
@@ -69,7 +74,7 @@ class NewWarningHandler(tornado.web.RequestHandler):
             except:
                 print("other errors!")
 
-
+# Not using it! Polling is inefficient!
 def poll_warning_info(last_warning_id, store):
     re_id = None
     while True:
@@ -94,6 +99,7 @@ class WarningSocketHandler(tornado.websocket.WebSocketHandler):
         WSConnectionManager.DelWSConnection(self.mid)
         print("Connection closed by client.")
 
+    # Not using it! It need to be used with the above function!
     @run_on_executor
     def on_message(self, message):
         print("on_message")

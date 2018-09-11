@@ -11,6 +11,13 @@ import threading
 import json
 import tornado
 from tornado.options import define, options
+import tornado.escape
+import tornado.httpserver
+import tornado.ioloop
+import tornado.locks
+import tornado.options
+import tornado.web
+import tornado.websocket
 
 define("port", default=7000, help="run on the given port", type=int)
 
@@ -22,7 +29,6 @@ def open_cap(url):
     max_sleep = 5.0
     cur_sleep = 0.1
     while True:
-        # cap = cv2.VideoCapture('./trump.mp4')
         cap = cv2.VideoCapture(url)
         if cap.isOpened():
             break
@@ -94,8 +100,8 @@ def start_recording(url = '0'):
 class Application(tornado.web.Application):
     def __init__(self):
         handlers = [
-            (r"/newCameraHandler", newCameraHandler),
-            (r"/deleteCameraHandler", deleteCameraHandler),
+            (r"/new_camera_feed", newCameraHandler),
+            (r"/delete_camera_feed", deleteCameraHandler),
         ]
         settings = dict(
             # web_title=u"Intelligent Monitor System",
@@ -122,15 +128,17 @@ class MultiThreadHandler:
 
 class newCameraHandler(tornado.web.RequestHandler):
     def get(self):
-        url = self.get_argument('new_camera_feed', None)
-        if url is none: return
+        url = self.get_argument('url', None)
+        print('new_camera_feed:'+url)
+        if url is None: return
         urls.add(url)
         MultiThreadHandler(start_recording, (url,))
 
 class deleteCameraHandler(tornado.web.RequestHandler):
     def get(self):
-        url = self.get_argument('delete_camera_feed', None)
-        if url is none: return
+        url = self.get_argument('url', None)
+        print('delete_camera_feed:'+url)
+        if url is None: return
         if url in urls:
             urls.remove(url)
 

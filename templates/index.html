@@ -15,24 +15,26 @@
             </div>
             <!-- /.col-lg-12 -->
         </div>
+        {% for url in urls%}
         <div class="row">
         	<div class="col-lg-8">
-        		<div class="panel panel-default" id="video_panel">
-        			<div class="panel-heading">Video</div>
+        		<div class="panel panel-default" id="video_panel_{{url}}">
+        			<div class="panel-heading">Video from {{url}}</div>
         			<div class="panel-body">
-						<img id="videofield" class="video" src="/video_feed" height="100%" width="100%">
+						<img id="videofield_{{url}}" class="video" src="/video_feed?video={{url}}" height="100%" width="100%">
 					</div>
 				</div>
         	</div>
         	<div class="col-lg-4">
-        		<div class="panel panel-default" id="warning_panel">
-        			<div class="panel-heading">Warnings</div>
+        		<div class="panel panel-default" id="warning_panel_{{url}}">
+        			<div class="panel-heading">Messages from {{url}}</div>
 					<div class="panel-body">
-						<div id="wswarning" class="list-group"></div>
+						<div id="wswarning_{{url}}" class="list-group"></div>
 					</div>
         		</div>
         	</div>
         </div>
+        {% end %}
 	{% else %}
 		<div class="col-lg-12 text-center text-info">
 			<h2>Please login to browse our website.</h2>

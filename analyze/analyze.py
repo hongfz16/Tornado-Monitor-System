@@ -9,6 +9,13 @@ import os
 import json
 import requests
 import tornado
+import tornado.escape
+import tornado.httpserver
+import tornado.ioloop
+import tornado.locks
+import tornado.options
+import tornado.web
+import tornado.websocket
 from tornado.options import define, options
 import psycopg2
 from db_utils import *
@@ -206,8 +213,8 @@ def connect_to_db(url):
 class Application(tornado.web.Application):
     def __init__(self):
         handlers = [
-            (r"/newCameraHandler", newCameraHandler),
-            (r"/deleteCameraHandler", deleteCameraHandler),
+            (r"/new_camera_feed", newCameraHandler),
+            (r"/delete_camera_feed", deleteCameraHandler),
         ]
         settings = dict(
             # web_title=u"Intelligent Monitor System",
@@ -234,15 +241,15 @@ class MultiThreadHandler:
 
 class newCameraHandler(tornado.web.RequestHandler):
     def get(self):
-        url = self.get_argument('new_camera_feed', None)
-        if url is none: return
+        url = self.get_argument('url', None)
+        if url is None: return
         urls.add(url)
         MultiThreadHandler(connect_to_db, (url,))
 
 class deleteCameraHandler(tornado.web.RequestHandler):
     def get(self):
-        url = self.get_argument('delete_camera_feed', None)
-        if url is none: return
+        url = self.get_argument('url', None)
+        if url is None: return
         if url in urls:
             urls.remove(url)
 

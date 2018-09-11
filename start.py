@@ -32,6 +32,7 @@ from utils.warningpusher import *
 from utils.db_utils import *
 from utils.host import *
 from utils.historywarning import *
+from utils.addvideofeed import *
 
 with open('secret.json','r') as f:
     db_data = json.load(f)
@@ -47,11 +48,12 @@ define("db_createsuperuser", default=True, help="Create Superuser")
 
 class IndexHandler(BaseHandler):
     async def get(self):
-        self.render("index.html")
+        self.render("index.html", urls=self.application.urls)
 
 class Application(tornado.web.Application):
     def __init__(self, db):
         self.db = db
+        self.urls = []
         handlers = [
             (r"/", IndexHandler),
             (r"/auth/signup", AuthSignupHandler),
@@ -65,6 +67,8 @@ class Application(tornado.web.Application):
             (r"/warning_websocket", WarningSocketHandler),
             (r"/historywarnings", HistoryWarningHandler),
             (r"/new_warning", NewWarningHandler),
+            (r"/add_video_feed", AddVideoFeedHandler),
+            (r"/delete_video_feed", DeleteVideoFeedHandler),
         ]
         settings = dict(
             web_title=u"Intelligent Monitor System",
@@ -75,6 +79,7 @@ class Application(tornado.web.Application):
             cookie_secret="__TODO:_GENERATE_YOUR_OWN_RANDOM_VALUE_HERE__",
             login_url="/auth/login",
             debug=True,
+            compress_response=True,
         )
         super(Application, self).__init__(handlers, **settings)
 
