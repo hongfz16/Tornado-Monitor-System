@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+
+{% block head %}
+<style>
+.table tbody tr td{
+    vertical-align: middle;
+    text-align: left;
+}
+.th {
+    text-align: center;
+}
+</style>
+{% end %}
+
+{% block body%}
+
+<div class="row">
+	<div class="col-lg-12">
+		<div class="panel panel-default" id="table_panel">
+			<div class="panel-heading">History warnings</div>
+			<div class="panel-body">
+				<table class="table">
+				    <thead>
+				        <tr>
+    				        <th>Name</th>
+    				        <th>Image</th>
+    				        <th>In Time</th>
+    				        <th>Out Time</th>
+				        </tr>
+				    </thead>
+				    <tbody>
+                        {% for entry in context%}
+                            <tr>
+                                <td>{{entry['name']}}</td>
+                                <td><img src="data:image/jpg;base64,{{entry['image']}}" class="img-responsive img-rounded" /></td>
+                                <td>{{entry['intime']}}</td>
+                                <td>{{entry['outtime']}}</td>
+                                <td>
+                                    <a href="/historywarnings?delete={{entry['id']}}" class="btn btn-info btn-lg">
+                                        <span class="glyphicon glyphicon-trash"></span> Delete 
+                                    </a>
+                                </td>
+                            </tr>
+                        {% end %}
+				    </tbody>
+				</table>
+            {#  <div class="row">
+                    <div class="col-lg-2 col-md-offset-3">
+                        {% if currentpage==1 %}
+                            <a class="btn btn-sm btn-primary btn-block" disabled="disabled">Prev</a>
+                        {% else %}
+                            <a type="a" class="btn btn-sm btn-primary btn-block">Prev</a>
+                        {% end %}
+                    </div>
+                    <div class="col-lg-2 col-md-offset-5 text-center">
+                        Page {{currentpage}}
+                    </div>
+                    <div class="col-lg-2 col-md-offset-7">
+                        {% if nextpage %}
+                        <a type="a" class="btn btn-sm btn-primary btn-block">Next</a>
+                        {% else %}
+                        <a type="a" class="btn btn-sm btn-primary btn-block" disabled="disabled">Next</a>
+                        {% end %}
+                    </div>
+                </div> #}
+                <ul class="pager">
+                    {% if currentpage>1 %}
+                        <li><a href="/historywarnings?page={{currentpage-1}}">Prev</a></li>
+                    {% else %}
+                        <li><a href="#" disabled='true'>Prev</a></li>
+                    {% end %}
+                    <span class="text-center">Page {{currentpage}}</span>
+                    {% if nextpage %}
+                        <li><a href="/historywarnings?page={{currentpage+1}}">Next</a></li>
+                    {% else %}
+                        <li><a href="#" disabled='true'>Next</a></li>
+                    {% end %}
+                </ul>
+			</div>
+		</div>
+	</div>
+</div>
+
+{% end %}

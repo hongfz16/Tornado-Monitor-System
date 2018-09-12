@@ -25,14 +25,14 @@ from tornado.concurrent import run_on_executor, return_future
 from tornado.options import define, options
 from tornado.platform.asyncio import AnyThreadEventLoopPolicy
 
-# from utils import analyze
-# from utils import record
 from utils.noresulterror import NoResultError
 from utils.mauth import *
 from utils.videostreamer import *
 from utils.warningpusher import *
 from utils.db_utils import *
 from utils.host import *
+from utils.historywarning import *
+from utils.addvideofeed import *
 
 with open('secret.json','r') as f:
     db_data = json.load(f)
@@ -48,13 +48,22 @@ define("db_createsuperuser", default=True, help="Create Superuser")
 
 class IndexHandler(BaseHandler):
     async def get(self):
-        self.render("index.html")
+        self.render("index.html", urls=self.application.urls)
+
+class DetailHandler(BaseHandler):
+    @tornado.web.authenticated
+    def get(self):
+        url = self.get_argument('video')
+        self.render("videodetail.html",url=url)
+
 
 class Application(tornado.web.Application):
     def __init__(self, db):
         self.db = db
+        self.urls = []
         handlers = [
             (r"/", IndexHandler),
+            (r"/detail", DetailHandler),
             (r"/auth/signup", AuthSignupHandler),
             (r"/auth/login", AuthLoginHandler),
             (r"/auth/logout", AuthLogoutHandler),
@@ -64,6 +73,11 @@ class Application(tornado.web.Application):
             (r"/video_feed", StreamHandler),
             (r"/video_websocket", VideoSocketHandler), # Really slow! Do not use!
             (r"/warning_websocket", WarningSocketHandler),
+            (r"/historywarnings", HistoryWarningHandler),
+            (r"/new_warning", NewWarningHandler),
+            (r"/add_video_feed", AddVideoFeedHandler),
+            (r"/delete_video_feed", DeleteVideoFeedHandler),
+            (r"/new_warning_writedb", NewWarningWritedbHandler)
         ]
         settings = dict(
             web_title=u"Intelligent Monitor System",
@@ -74,16 +88,9 @@ class Application(tornado.web.Application):
             cookie_secret="__TODO:_GENERATE_YOUR_OWN_RANDOM_VALUE_HERE__",
             login_url="/auth/login",
             debug=True,
+            compress_response=True,
         )
         super(Application, self).__init__(handlers, **settings)
-
-class MultiThreadHandler:
-    def __init__(self, func, *args):
-        self.thread = Thread(target = func, args=args)
-        self.thread.start()
-
-    def finish(self):
-        self.thread.join()
 
 async def main():
     tornado.options.parse_command_line()

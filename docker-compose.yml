@@ -3,13 +3,22 @@ services:
 
   analyze_thread:
     build: ./analyze
+    expose:
+      - "6000"
     depends_on:
       - record_thread
       - redis
       - postgres
+    links:
+      - postgres
 
   record_thread:
     build: ./record
+    #devices:
+    #  - /dev/video0:/dev/video0
+    #  - /dev/video1:/dev/video1
+    expose:
+      - "7000"
     depends_on:
       - redis
       - postgres
@@ -35,12 +44,16 @@ services:
     image: redis
     expose:
       - "6379"
+    # ports:
+      # - "6379:6379"
 
   postgres:
     # restart: always
     image: postgres
     expose:
       - "5432"
+    # ports:
+    #   - "5432:5432"
     environment:
       POSTGRES_USER: "tornado"
       POSTGRES_PASSWORD: "ttasw1234"
