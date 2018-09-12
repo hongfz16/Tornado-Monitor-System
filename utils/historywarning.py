@@ -32,44 +32,59 @@ perpage = 5
 class HistoryWarningHandler(BaseHandler):
     @tornado.web.authenticated
     async def get(self):
-        deleteid = self.get_argument('delete', None)
-        if deleteid is None:
-            pagestr = self.get_argument('page', 'bad')
-            if not pagestr.isdigit():
-                self.set_status(404)
-                return
-            page = int(pagestr)
-            if page < 1:
-                page = 1
+        url = self.get_argument('url', None)
+        if url is None:
             context = []
-            try:
-                res = await self.query("SELECT * FROM warnings ORDER BY id DESC;")
-            except NoResultError:
-                res = []
-            count = len(res)
-            if  (page-1) * perpage >= count:
-                page = 1
-            for i in range(perpage):
-                index = (page-1)*perpage+1+i
-                if index > count: break
-                index -= 1
+            for url in self.application.urls:
+                res = await self.queryone("SELECT * FROM warnings WHERE id = (SELECT MAX(id) WHERE url = %s)", url)
                 ans = {}
-                # result = await self.queryone("SELECT * FROM warnings WHERE id = %s;", (page-1)*perpage+1+i)
-                ans['id'] = res[index]['id']
-                ans['name'] = res[index]['name']
-                ans['intime'] = res[index]['intime']
-                ans['outtime'] = res[index]['outtime']
-                ans['url'] = res[index]['url']
-                ans['image'] = res[index]['image'].tobytes()
-
+                ans['id'] = res['id']
+                ans['name'] = res['name']
+                ans['intime'] = res['intime']
+                ans['outtime'] = res['outtime']
+                ans['url'] = res['url']
+                ans['image'] = res['image'].tobytes()
                 context.append(ans)
-
-            # print(context)
-            self.render("historywarnings.html", context=context, currentpage=page , nextpage=(page*perpage<count))
+            self.render("historywarnings.html", context=context)
         else:
-            if not deleteid.isdigit():
-                self.set_status(404)
-                return
-            id = int(deleteid)
-            await self.execute("DELETE FROM warnings WHERE id = %s;", id)
-            self.redirect("/historywarnings?page=1")
+            deleteid = self.get_argument('delete', None)
+            if deleteid is None:
+                pagestr = self.get_argument('page', 'bad')
+                if not pagestr.isdigit():
+                    self.set_status(404)
+                    return
+                page = int(pagestr)
+                if page < 1:
+                    page = 1
+                context = []
+                try:
+                    res = await self.query("SELECT * FROM warnings WHERE url = %s ORDER BY id DESC;", url)
+                except NoResultError:
+                    res = []
+                count = len(res)
+                if (page-1) * perpage >= count:
+                    page = 1
+                for i in range(perpage):
+                    index = (page-1)*perpage+1+i
+                    if index > count: break
+                    index -= 1
+                    ans = {}
+                    # result = await self.queryone("SELECT * FROM warnings WHERE id = %s;", (page-1)*perpage+1+i)
+                    ans['id'] = res[index]['id']
+                    ans['name'] = res[index]['name']
+                    ans['intime'] = res[index]['intime']
+                    ans['outtime'] = res[index]['outtime']
+                    ans['url'] = res[index]['url']
+                    ans['image'] = res[index]['image'].tobytes()
+
+                    context.append(ans)
+
+                # print(context)
+                self.render("historywarningsdetail.html", context=context, currentpage=page , nextpage=(page*perpage<count))
+            else:
+                if not deleteid.isdigit():
+                    self.set_status(404)
+                    return
+                id = int(deleteid)
+                await self.execute("DELETE FROM warnings WHERE id = %s;", id)
+                self.redirect("/historywarnings?url=%s&page=1"%url)
