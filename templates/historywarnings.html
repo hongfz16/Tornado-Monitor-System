@@ -18,7 +18,7 @@
 	<div class="col-lg-12">
         {% for entry in context%}
 		<div class="panel panel-default" id="table_panel">
-			<div class="panel-heading"><a href="/historywarnings?url={{entry['url']}}&page=1">History warnings from {{entry['url']}}</a></div>
+			<div class="panel-heading">History warnings from {{entry['url']}} <a href="/historywarnings?url={{entry['url']}}&page=1">view detail</a></div>
 			<div class="panel-body">
 				<table class="table">
 				    <thead>

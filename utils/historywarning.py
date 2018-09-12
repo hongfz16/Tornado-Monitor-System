@@ -34,57 +34,61 @@ class HistoryWarningHandler(BaseHandler):
     async def get(self):
         url = self.get_argument('url', None)
         if url is None:
-            context = []
-            for url in self.application.urls:
-                res = await self.queryone("SELECT * FROM warnings WHERE id = (SELECT MAX(id) WHERE url = %s)", url)
-                ans = {}
-                ans['id'] = res['id']
-                ans['name'] = res['name']
-                ans['intime'] = res['intime']
-                ans['outtime'] = res['outtime']
-                ans['url'] = res['url']
-                ans['image'] = res['image'].tobytes()
-                context.append(ans)
-            self.render("historywarnings.html", context=context)
-        else:
             deleteid = self.get_argument('delete', None)
             if deleteid is None:
-                pagestr = self.get_argument('page', 'bad')
-                if not pagestr.isdigit():
-                    self.set_status(404)
-                    return
-                page = int(pagestr)
-                if page < 1:
-                    page = 1
                 context = []
-                try:
-                    res = await self.query("SELECT * FROM warnings WHERE url = %s ORDER BY id DESC;", url)
-                except NoResultError:
-                    res = []
-                count = len(res)
-                if (page-1) * perpage >= count:
-                    page = 1
-                for i in range(perpage):
-                    index = (page-1)*perpage+1+i
-                    if index > count: break
-                    index -= 1
+                for url in self.application.urls:
+                    try:
+                        res = await self.queryone("SELECT * FROM warnings WHERE id = (SELECT MAX(id) FROM warnings WHERE url = %s)", url)
+                    except:
+                        continue    
                     ans = {}
-                    # result = await self.queryone("SELECT * FROM warnings WHERE id = %s;", (page-1)*perpage+1+i)
-                    ans['id'] = res[index]['id']
-                    ans['name'] = res[index]['name']
-                    ans['intime'] = res[index]['intime']
-                    ans['outtime'] = res[index]['outtime']
-                    ans['url'] = res[index]['url']
-                    ans['image'] = res[index]['image'].tobytes()
-
+                    ans['id'] = res['id']
+                    ans['name'] = res['name']
+                    ans['intime'] = res['intime']
+                    ans['outtime'] = res['outtime']
+                    ans['url'] = res['url']
+                    ans['image'] = res['image'].tobytes()
                     context.append(ans)
-
-                # print(context)
-                self.render("historywarningsdetail.html", context=context, currentpage=page , nextpage=(page*perpage<count))
+                self.render("historywarnings.html", context=context)
             else:
                 if not deleteid.isdigit():
                     self.set_status(404)
                     return
                 id = int(deleteid)
+                res = await self.queryone("SELECT url FROM warnings WHERE id = %s;", id)
                 await self.execute("DELETE FROM warnings WHERE id = %s;", id)
-                self.redirect("/historywarnings?url=%s&page=1"%url)
+                self.redirect("/historywarnings?url=%s&page=1"%res['url'])
+        else:
+            pagestr = self.get_argument('page', 'bad')
+            if not pagestr.isdigit():
+                self.set_status(404)
+                return
+            page = int(pagestr)
+            if page < 1:
+                page = 1
+            context = []
+            try:
+                res = await self.query("SELECT * FROM warnings WHERE url = %s ORDER BY id DESC;", url)
+            except NoResultError:
+                res = []
+            count = len(res)
+            if (page-1) * perpage >= count:
+                page = 1
+            for i in range(perpage):
+                index = (page-1)*perpage+1+i
+                if index > count: break
+                index -= 1
+                ans = {}
+                # result = await self.queryone("SELECT * FROM warnings WHERE id = %s;", (page-1)*perpage+1+i)
+                ans['id'] = res[index]['id']
+                ans['name'] = res[index]['name']
+                ans['intime'] = res[index]['intime']
+                ans['outtime'] = res[index]['outtime']
+                ans['url'] = res[index]['url']
+                ans['image'] = res[index]['image'].tobytes()
+
+                context.append(ans)
+
+            # print(context)
+            self.render("historywarningsdetail.html", context=context, currentpage=page , nextpage=(page*perpage<count), url=url)
