@@ -16,9 +16,8 @@
 
 <div class="row">
 	<div class="col-lg-12">
-        {% for entry in context%}
 		<div class="panel panel-default" id="table_panel">
-			<div class="panel-heading"><a href="/historywarnings?url={{entry['url']}}&page=1">History warnings from {{entry['url']}}</a></div>
+			<div class="panel-heading">History warnings from {{url}}</div>
 			<div class="panel-body">
 				<table class="table">
 				    <thead>
@@ -27,40 +26,40 @@
     				        <th>Image</th>
     				        <th>In Time</th>
     				        <th>Out Time</th>
+                            <th>Operation</th>
 				        </tr>
 				    </thead>
 				    <tbody>
-                        {# {% for entry in context%} #}
+                        {% for entry in context%}
                             <tr>
                                 <td>{{entry['name']}}</td>
                                 <td><img src="data:image/jpg;base64,{{entry['image']}}" class="img-responsive img-rounded" /></td>
                                 <td>{{entry['intime']}}</td>
                                 <td>{{entry['outtime']}}</td>
-                                {# <td>
-                                    <a href="/historywarnings?delete={{entry['id']}}" class="btn btn-info btn-lg">
+                                <td>
+                                    <a href="/historywarnings?delete={{entry['id']}}" class="btn btn-info btn-sm">
                                         <span class="glyphicon glyphicon-trash"></span> Delete 
                                     </a>
-                                </td> #}
+                                </td>
                             </tr>
-                        {# {% end %} #}
+                        {% end %}
 				    </tbody>
 				</table>
-                {# <ul class="pager">
+                <ul class="pager">
                     {% if currentpage>1 %}
-                        <li><a href="/historywarnings?page={{currentpage-1}}">Prev</a></li>
+                        <li><a href="/h&istorywarnings?url={{url}}page={{currentpage-1}}">Prev</a></li>
                     {% else %}
                         <li><a href="#" disabled='true'>Prev</a></li>
                     {% end %}
                     <span class="text-center">Page {{currentpage}}</span>
                     {% if nextpage %}
-                        <li><a href="/historywarnings?page={{currentpage+1}}">Next</a></li>
+                        <li><a href="/historywarnings?url={{url}}&page={{currentpage+1}}">Next</a></li>
                     {% else %}
                         <li><a href="#" disabled='true'>Next</a></li>
                     {% end %}
-                </ul> #}
+                </ul>
 			</div>
 		</div>
-        {% end %}
 	</div>
 </div>
 

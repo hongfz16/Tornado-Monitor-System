@@ -14,9 +14,9 @@ services:
 
   record_thread:
     build: ./record
-    devices:
-      - /dev/video0:/dev/video0
-      - /dev/video1:/dev/video1
+    # devices:
+    #   - /dev/video0:/dev/video0
+    #   - /dev/video1:/dev/video1
     expose:
       - "7000"
     depends_on:
