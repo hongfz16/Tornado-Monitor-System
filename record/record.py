@@ -77,13 +77,16 @@ def start_recording(url = '0'):
     print('Start Recording %s...'%url)
     while url in urls:
         hello, image = cap.read()
-        # if image is None:
-        #     cap.release()
-        #     # cap = cv2.VideoCapture(0)
-        #     cap = cv2.VideoCapture('./trimed.mp4')
-        #     cap = open_cap()
-        #     hello, image = cap.read()
-        #     print(None)
+        while image is None:
+            cap.release()
+            # cap = cv2.VideoCapture(0)
+            # cap = cv2.VideoCapture('./trimed.mp4')
+            if url.isdigit():
+                cap = open_cap(int(url))
+            else:
+                cap = open_cap(url)
+            hello, image = cap.read()
+            print(None)
         time.sleep(0.05)
         if image is None:
             time.sleep(0.5)
