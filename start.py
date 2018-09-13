@@ -34,17 +34,17 @@ from utils.host import *
 from utils.historywarning import *
 from utils.addvideofeed import *
 
-with open('secret.env','r') as f:
+with open('.env','r') as f:
     db_data = []
     for i in range(0,3):
         line = f.readline()
         tmp = ''
         start = False
         for j in range(len(line)):
-            if line[j] == '\"' and start == False:
+            if line[j] == '=':
                 start = True
                 continue
-            if line[j] == '\"' and start == True:
+            if line[j] == '\n':
                 break
             if start:
                 tmp += line[j]
@@ -111,26 +111,38 @@ async def main():
     
     # Create the global connection pool.
     print("Trying to connect to postgres...")
-    async with aiopg.create_pool(
-            host=options.db_host,
-            port=options.db_port,
-            user=options.db_user,
-            password=options.db_password,
-            dbname=options.db_database) as db:
-        print("Successfully connected to postgres!")
-        if options.db_delete:
-            await clear_db(db, './sql/delete.sql')
-            await maybe_create_tables(db, './sql/schema.sql')
-        if options.db_createsuperuser:
-            await create_superuser(db)
-        app = Application(db)
-        app.listen(options.port)
+    while True:
+        try:
+            db = await aiopg.create_pool(
+                host=options.db_host,
+                port=options.db_port,
+                user=options.db_user,
+                password=options.db_password,
+                dbname=options.db_database)
+            break
+        except:
+            time.sleep(5)
+            print("Retrying...")
+    # async with aiopg.create_pool(
+    #         host=options.db_host,
+    #         port=options.db_port,
+    #         user=options.db_user,
+    #         password=options.db_password,
+    #         dbname=options.db_database) as db:
+    print("Successfully connected to postgres!")
+    if options.db_delete:
+        await clear_db(db, './sql/delete.sql')
+        await maybe_create_tables(db, './sql/schema.sql')
+    if options.db_createsuperuser:
+        await create_superuser(db)
+    app = Application(db)
+    app.listen(options.port)
 
-        # In this demo the server will simply run until interrupted
-        # with Ctrl-C, but if you want to shut down more gracefully,
-        # call shutdown_event.set().
-        shutdown_event = tornado.locks.Event()
-        await shutdown_event.wait()
+    # In this demo the server will simply run until interrupted
+    # with Ctrl-C, but if you want to shut down more gracefully,
+    # call shutdown_event.set().
+    shutdown_event = tornado.locks.Event()
+    await shutdown_event.wait()
 
 if __name__ == "__main__":
     asyncio.set_event_loop_policy(tornado.platform.asyncio.AnyThreadEventLoopPolicy())

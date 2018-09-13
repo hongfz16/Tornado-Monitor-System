@@ -1,4 +1,4 @@
 .DS_Store
-secret.env
+.env
 __pycache__
 .idea
