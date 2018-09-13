@@ -30,6 +30,7 @@ def open_cap(url):
     max_sleep = 5.0
     cur_sleep = 0.1
     while True:
+        print('Trying to open ' + url)
         cap = cv2.VideoCapture(url)
         if cap.isOpened():
             break

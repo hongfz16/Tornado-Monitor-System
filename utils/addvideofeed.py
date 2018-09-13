@@ -28,6 +28,19 @@ from .host import *
 from .mauth import BaseHandler
 from utils.noresulterror import NoResultError
 
+def TranslateUrl(url):
+    if not url.startswith('rtsp'):
+        return url
+    new_url = url.replace('&','%26')
+    # new_url = url.replace('+','%2B')
+    # new_url = url.replace(' ','%20')
+    # new_url = url.replace('/','%2F')
+    # new_url = url.replace('?','%3F')
+    # new_url = url.replace('%','%25')
+    # new_url = url.replace('#','%23')
+    # new_url = url.replace('=','%3D')
+    return new_url
+
 class AddVideoFeedHandler(BaseHandler):
     @tornado.web.authenticated
     def get(self):
@@ -41,6 +54,7 @@ class AddVideoFeedHandler(BaseHandler):
             self.render('addvideofeed.html', error='This url has been added.', message=None)
             return
         self.application.urls.append(new_url)
+        new_url = TranslateUrl(new_url)
         print('http://record_thread:7000/new_camera_feed?url='+new_url)
         requests.get('http://record_thread:7000/new_camera_feed?url='+new_url)
         requests.get('http://analyze_thread:6000/new_camera_feed?url='+new_url)
@@ -58,6 +72,7 @@ class DeleteVideoFeedHandler(BaseHandler):
             self.render('deletevideofeed.html', error='This url was not in the list.', message=None)
             return
         self.application.urls.remove(new_url)
+        new_url = TranslateUrl(new_url)
         requests.get('http://record_thread:7000/delete_camera_feed?url='+new_url)
         requests.get('http://analyze_thread:6000/delete_camera_feed?url='+new_url)
         self.render('deletevideofeed.html', error=None, message='Successfully remove url: '+new_url)
