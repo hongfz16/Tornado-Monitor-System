@@ -34,13 +34,27 @@ from utils.host import *
 from utils.historywarning import *
 from utils.addvideofeed import *
 
-with open('secret.json','r') as f:
-    db_data = json.load(f)
+with open('secret.env','r') as f:
+    db_data = []
+    for i in range(0,3):
+        line = f.readline()
+        tmp = ''
+        start = False
+        for j in range(len(line)):
+            if line[j] == '\"' and start == False:
+                start = True
+                continue
+            if line[j] == '\"' and start == True:
+                break
+            if start:
+                tmp += line[j]
+        db_data.append(tmp)
+
     define("db_host", default=postgreshost, help="database host")
     define("db_port", default=5432, help="database port")
-    define("db_database", default=db_data['Database'], help="database name")
-    define("db_user", default=db_data['Username'], help="database user")
-    define("db_password", default=db_data['Password'], help="database password")	
+    define("db_database", default=db_data[2], help="database name")
+    define("db_user", default=db_data[0], help="database user")
+    define("db_password", default=db_data[1], help="database password")	
 
 define("port", default=8000, help="run on the given port", type=int)
 define("db_delete", default=True, help="Delte all the tables in db")

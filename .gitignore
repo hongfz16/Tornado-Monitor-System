@@ -1,5 +1,5 @@
 .DS_Store
-secret.json
+secret.env
 __pycache__
 .idea
 *.mp4
