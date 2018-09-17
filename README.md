@@ -1,7 +1,7 @@
 # Tornado-Monitor-Sytem
 
 ## Demo
-Click [here](http://123.207.157.213:8000) for a simple demo.
+Click [here](http://123.207.157.213:8000) for a simple demo. You can login with <Email: su@su.com> and <Password: superuser>.
 
 ## Introduction
 This is a simple Monitor System supporting RTSP web or local camera. Web server is built using Tornado.
