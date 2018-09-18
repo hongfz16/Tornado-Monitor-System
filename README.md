@@ -1,7 +1,7 @@
 # Tornado-Monitor-Sytem
 
 ## Demo
-Click [here](http://123.207.157.213:8000) for a simple demo. You can login with <Email: su@su.com> and <Password: superuser>.
+Click [here](http://123.207.157.213:8000) for a simple demo. You can login with <Email: su@su.com> and <Password: superuser>. Please note that you can now only add `trump.mp4` or other rtsp web cam to video feed in this demo.
 
 ## Introduction
 This is a simple Monitor System supporting RTSP web or local camera. Web server is built using Tornado.
